@@ -1,0 +1,13 @@
+node_modules
+.next
+.env
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+/backups/
+.DS_Store
+.fuse_hidden*
+img/_tmp/
+npm-debug.log*
+.vercel

@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+body {
+  @apply bg-porcelain text-ink font-body antialiased;
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-spruce;
+  }
+  .btn-primary {
+    @apply btn bg-spruce text-white hover:bg-spruce-deep;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-white text-ink hover:border-spruce hover:text-spruce;
+  }
+  .field {
+    @apply w-full rounded-xl border border-line bg-white px-4 py-2.5 text-sm text-ink placeholder:text-stone2/70 focus:border-spruce focus:outline-none focus:ring-2 focus:ring-spruce/15;
+  }
+  .card {
+    @apply rounded-card border border-line bg-white shadow-card;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wide text-stone2;
+  }
+  /* One consistent size for every status pill (Verified, VIP, New, Open Now, gender, Spa, etc.)
+     regardless of whether it carries an icon — fixes badges looking like different sizes next to
+     each other just because some have an icon + bold gradient and others are plain text. */
+  .badge-pill {
+    @apply inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold leading-none;
+  }
+}
+
+/* Subtle textured/tinted section backgrounds, an alternative to the flat bg-porcelain default for
+   a page or section that wants a little more visual warmth. Not wired to any page by default,
+   apply the class directly where wanted (see /faq for bg-silk-mist in use). */
+.bg-bamboo-grain {
+  background-color: #faf7f2;
+  background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 7px,
+      rgba(210, 198, 182, 0.15) 7px,
+      rgba(210, 198, 182, 0.15) 8px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 15px,
+      rgba(210, 198, 182, 0.08) 15px,
+      rgba(210, 198, 182, 0.08) 16px
+    );
+}
+
+.bg-silk-mist {
+  background: linear-gradient(135deg, #eef2f1 0%, #e3e9e7 50%, #d4dedb 100%);
+  position: relative;
+  overflow: hidden;
+}
+.bg-silk-mist::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

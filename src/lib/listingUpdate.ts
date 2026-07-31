@@ -1,0 +1,208 @@
+// Shared listing/hours-update logic used by both the cuddler's own dashboard (src/app/actions.ts)
+// and the admin "edit on behalf of a cuddler" panel (src/app/admin/actions.ts) — kept in a plain
+// (non "use server") module so it's NOT independently callable as a server action/RPC endpoint by
+// a client; every caller is responsible for its own auth check (currentCuddler() vs requireAdmin())
+// before ever reaching these functions. Do not add "use server" to this file.
+
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { db } from "./db";
+import { cuddlers, cuddlerHours, type Cuddler } from "./schema";
+import { isVip } from "./stripe";
+import { resolveLocationStrict } from "./geo";
+import { normalizeWebsiteUrl } from "./url";
+import { buildSocialLinksJson } from "./socialLinks";
+import { checkGoLive } from "./activity";
+import { WEEK_DAYS, RATE_NOT_OFFERED } from "./config";
+
+export async function applyListingUpdate(
+  id: string,
+  existing: Cuddler,
+  formData: FormData
+): Promise<{ error: string } | { ok: string }> {
+  const locationText = String(formData.get("location") || "").trim();
+  const loc = resolveLocationStrict(locationText);
+  if (!loc) return { error: "Enter a 5-digit zip code, or your city and state (e.g. Austin, TX)." };
+
+  const [city, stateZip] = loc.label.split(",").map((s) => s.trim());
+  const [state, zipMaybe] = (stateZip || "").split(/\s+/);
+
+  // Second location is a Monthly VIP perk — optional, blank clears it, ignored entirely off-plan.
+  const locationText2 = isVip(existing) ? String(formData.get("location2") || "").trim() : "";
+  let loc2: ReturnType<typeof resolveLocationStrict> = null;
+  if (locationText2) {
+    loc2 = resolveLocationStrict(locationText2);
+    if (!loc2) return { error: "Enter a 5-digit zip code, or your city and state (e.g. Austin, TX) for your second location." };
+  }
+  const [city2, stateZip2] = loc2 ? loc2.label.split(",").map((s) => s.trim()) : [null, null];
+  const [state2, zipMaybe2] = loc2 ? (stateZip2 || "").split(/\s+/) : [null, null];
+
+  // Services: checked cuddle-type boxes + a free-text "other" field, merged into one comma list.
+  // Agency accounts don't submit this field at all (see ListingForm.tsx) — their services column is
+  // instead auto-derived from each team member's cuddle types (see syncAgencyServices in
+  // app/actions.ts), so it must be left untouched here rather than blanked to null.
+  const checkedServices = formData.getAll("services").map((v) => String(v).trim()).filter(Boolean);
+  const otherServices = String(formData.get("servicesOther") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const services = existing.accountType === "agency" ? existing.services : [...checkedServices, ...otherServices].join(", ") || null;
+
+  // Amenities & add-ons: same checked-boxes + free-text pattern as services.
+  const checkedAmenities = formData.getAll("amenities").map((v) => String(v).trim()).filter(Boolean);
+  const otherAmenities = String(formData.get("amenitiesOther") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const amenities = [...checkedAmenities, ...otherAmenities].join(", ") || null;
+
+  // Payment methods + discounts: same checked-boxes + free-text pattern.
+  const checkedPayments = formData.getAll("paymentMethods").map((v) => String(v).trim()).filter(Boolean);
+  const otherPayments = String(formData.get("paymentMethodsOther") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const paymentMethods = [...checkedPayments, ...otherPayments].join(", ") || null;
+
+  const checkedDiscounts = formData.getAll("discounts").map((v) => String(v).trim()).filter(Boolean);
+  const otherDiscounts = String(formData.get("discountsOther") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const discounts = [...checkedDiscounts, ...otherDiscounts].join(", ") || null;
+
+  // Rates: one price per session length. Blank = "Contact me" on the public page; checking
+  // "I don't offer this" for a duration stores RATE_NOT_OFFERED instead, which hides that row
+  // from the public listing entirely (see RATE_NOT_OFFERED's comment in lib/config.ts).
+  const parseRate = (key: string): number | null => {
+    if (formData.get(`${key}NotOffered`) === "on") return RATE_NOT_OFFERED;
+    const raw = formData.get(key);
+    const n = Number(raw);
+    return raw && Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
+  };
+  const rate30 = parseRate("rate30");
+  const rate60 = parseRate("rate60");
+  const rate90 = parseRate("rate90");
+  const rate120Plus = parseRate("rate120Plus");
+
+  // Contact methods: at least one of Phone Call / Text / Email / Site Messages Only must be
+  // selected. Site Messages Only is mutually exclusive with the other three — when it's on, force
+  // the others off server-side regardless of what was submitted, since ListingForm.tsx hides them
+  // from the form entirely in that case (see the messagesOnly comment in schema.ts).
+  const messagesOnly = formData.get("messagesOnly") === "on";
+  const acceptsCalls = !messagesOnly && formData.get("acceptsCalls") === "on";
+  const acceptsTexts = !messagesOnly && formData.get("acceptsTexts") === "on";
+  const acceptsEmail = !messagesOnly && formData.get("acceptsEmail") === "on";
+  const phone = String(formData.get("phone") || "").trim() || null;
+  const contactEmail = String(formData.get("contactEmail") || "").trim() || null;
+
+  if (!messagesOnly && !acceptsCalls && !acceptsTexts && !acceptsEmail) {
+    return { error: "Select at least one way for clients to contact you (Phone Call, Text, Email, or Site Messages Only)." };
+  }
+  if ((acceptsCalls || acceptsTexts) && !phone) {
+    return { error: "Enter a phone number for Phone Call / Text." };
+  }
+  if (acceptsEmail && !contactEmail) {
+    return { error: "Enter a contact email for Email." };
+  }
+
+  // Personal/business website link — manually reviewed before it's ever shown publicly (see the
+  // websiteUrl comment in schema.ts). Re-submitting the exact same URL that's already
+  // approved/pending/rejected doesn't reset the review; only an actual change to the link does —
+  // otherwise just hitting "Save Changes" on the rest of the form would needlessly bump an
+  // approved link back into the review queue.
+  const { url: websiteUrl, error: websiteError } = normalizeWebsiteUrl(String(formData.get("websiteUrl") || ""));
+  if (websiteError) return { error: websiteError };
+  const websiteChanged = websiteUrl !== (existing.websiteUrl ?? null);
+  const websiteStatus = websiteChanged ? (websiteUrl ? "pending" : "none") : existing.websiteStatus;
+  const websiteNote = websiteChanged ? null : existing.websiteNote;
+
+  // Social links (Instagram/TikTok/X) — unlike websiteUrl above, these aren't admin-reviewed, so
+  // they just save and go live immediately (see the socialLinks comment in schema.ts).
+  const socialLinks = buildSocialLinksJson(formData);
+
+  await db
+    .update(cuddlers)
+    .set({
+      name: String(formData.get("name") || existing.name).trim() || existing.name,
+      // Optional, agency accounts don't submit this field (see ListingForm.tsx) — falls back to
+      // whatever was already stored rather than blanking it if the field is simply absent.
+      gender: (() => {
+        const raw = String(formData.get("gender") || "");
+        return raw === "male" || raw === "female" ? raw : existing.accountType === "agency" ? existing.gender : null;
+      })(),
+      headline: String(formData.get("headline") || "").trim() || null,
+      bio: String(formData.get("bio") || "").trim() || null,
+      // photoUrl/photoUrl2/photoUrl3 are set directly by /api/photos (see PhotoUploader), not this form.
+      phone,
+      contactEmail,
+      acceptsCalls,
+      acceptsTexts,
+      acceptsEmail,
+      messagesOnly,
+      services,
+      amenities,
+      paymentMethods,
+      discounts,
+      rate30,
+      rate60,
+      rate90,
+      rate120Plus,
+      mobile: formData.get("mobile") === "on",
+      socialMediaOptIn: formData.get("socialMediaOptIn") === "on",
+      websiteUrl,
+      websiteStatus,
+      websiteNote,
+      socialLinks,
+      address: String(formData.get("address") || "").trim() || null,
+      city,
+      state: state || "",
+      zip: zipMaybe || locationText.match(/\b\d{5}\b/)?.[0] || existing.zip,
+      lat: loc.lat,
+      lng: loc.lng,
+      city2: loc2 ? city2 : null,
+      state2: loc2 ? state2 || "" : null,
+      zip2: loc2 ? zipMaybe2 || locationText2.match(/\b\d{5}\b/)?.[0] || null : null,
+      lat2: loc2 ? loc2.lat : null,
+      lng2: loc2 ? loc2.lng : null,
+      // Publishing is now its own one-click toggle (see togglePublished in app/actions.ts and the
+      // button in the dashboard's Status card), not a checkbox in this form — so this save must
+      // never touch it, or every listing edit would silently un-publish the ad (there's no
+      // "published" field submitted by this form anymore to read a real value from).
+      published: existing.published,
+    })
+    .where(eq(cuddlers.id, id));
+  await checkGoLive(id);
+  revalidatePath(`/cuddlers/${existing.slug}`);
+  return { ok: "Listing saved." };
+}
+
+export async function applyHoursUpdate(
+  id: string,
+  slug: string,
+  formData: FormData
+): Promise<{ error?: string; ok?: string }> {
+  const rows = WEEK_DAYS.map(({ day }) => {
+    const closed = formData.get(`day_${day}_closed`) === "on";
+    const open = String(formData.get(`day_${day}_open`) || "").trim();
+    const close = String(formData.get(`day_${day}_close`) || "").trim();
+    const missingTimes = !open || !close;
+    return {
+      cuddlerId: id,
+      dayOfWeek: day,
+      closed: closed || missingTimes,
+      openTime: closed || missingTimes ? null : open,
+      closeTime: closed || missingTimes ? null : close,
+    };
+  });
+
+  await db.delete(cuddlerHours).where(eq(cuddlerHours.cuddlerId, id));
+  await db.insert(cuddlerHours).values(rows);
+
+  // Checkbox absent from the submitted form = unchecked, same convention as day_X_closed above.
+  const gatekeepHours = formData.get("gatekeepHours") === "on";
+  await db.update(cuddlers).set({ gatekeepHours }).where(eq(cuddlers.id, id));
+
+  revalidatePath(`/cuddlers/${slug}`);
+  return { ok: "Hours saved." };
+}
