@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Crown, Zap, Check } from "lucide-react";
 import type { Cuddler } from "@/lib/schema";
 import { isVip, isNewListing, isBoosted, isVerified, photosApproved } from "@/lib/stripe";
-import { RATE_NOT_OFFERED } from "@/lib/config";
 
 export default function ListingCard({
   cuddler: t,
@@ -33,12 +32,7 @@ export default function ListingCard({
   // Manually-cropped card thumbnail if an admin has set one (see admin/crop-photo) — otherwise the
   // full photo, auto-cropped to this square by CSS object-cover below.
   const cardPhoto = t.cardPhotoUrl || t.photoUrl;
-  const services = (t.services ?? "").split(",").map((s) => s.trim()).filter(Boolean).slice(0, 4);
-  const setRates = [t.rate30, t.rate60, t.rate90, t.rate120Plus].filter(
-    (r): r is number => r != null && r !== RATE_NOT_OFFERED
-  );
-  const rate60Set = t.rate60 != null && t.rate60 !== RATE_NOT_OFFERED;
-  const rateLabel = rate60Set ? `$${t.rate60}/60min` : setRates.length ? `From $${Math.min(...setRates)}` : null;
+  const rateLabel = t.hourlyRate != null ? `$${t.hourlyRate}/hr` : null;
 
   // Boosted (gold) always wins — it's the temporary, paid-per-use spotlight.
   // VIP (spruce) is the persistent perk, shown only when a listing isn't currently boosted.
@@ -119,9 +113,6 @@ export default function ListingCard({
           <p className="mt-1 truncate font-display text-[15px] italic text-ink/80">&ldquo;{t.headline}&rdquo;</p>
         )}
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-stone2">
-          {services.map((s) => (
-            <span key={s} className="rounded-full border border-line bg-porcelain px-2.5 py-0.5">{s}</span>
-          ))}
           {t.mobile && <span className="rounded-full border border-line bg-porcelain px-2.5 py-0.5">Mobile</span>}
           {rateLabel && (
             <span className="ml-auto rounded-full bg-spruce-tint px-3 py-1.5 text-sm font-bold text-spruce">

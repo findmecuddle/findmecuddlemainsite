@@ -23,6 +23,9 @@ export const cuddlers = sqliteTable(
     // after, since it drives which Stripe plans the dashboard offers (small_agency/large_agency vs.
     // standard/vip — see AGENCY_PLAN_KEYS in lib/config.ts) and which dashboard/public
     // page sections render (team roster vs. rates/services — see isAgencyAccount() in lib/stripe.ts).
+    // NOTE: hidden from signup as of the v1 launch decision (see OnboardingForm.tsx) — no new
+    // agency accounts can be created, but this column and all its backing code stay in place in
+    // case it's turned back on later. See README "What's different" section.
     accountType: text("account_type").notNull().default("solo"), // solo | agency
 
     // Ad content
@@ -119,16 +122,49 @@ export const cuddlers = sqliteTable(
     // "timestamp, never cleared, checked through a time-window helper" pattern as boostedAt —
     // see isManuallyOpen() in lib/hours.ts.
     openNowActivatedAt: integer("open_now_activated_at", { mode: "timestamp_ms" }),
+    // Legacy: cuddle-type checklist, amenities, payment methods, discounts — removed from the
+    // dashboard/public page as of the "getting to know you" redesign (2026-08-05). Left in place,
+    // nullable and unused going forward, rather than dropped, to avoid a SQLite column-drop
+    // migration — same pattern as passwordHash/idKey elsewhere in this table.
     services: text("services"), // comma-separated
-    amenities: text("amenities"), // comma-separated — see AMENITIES in lib/config.ts
-    paymentMethods: text("payment_methods"), // comma-separated — see PAYMENT_METHODS in lib/config.ts
-    discounts: text("discounts"), // comma-separated — see DISCOUNT_TYPES in lib/config.ts
-    // Per-session rates by duration, whole dollars. Null = "Contact for rates" on the public page.
+    amenities: text("amenities"), // comma-separated
+    paymentMethods: text("payment_methods"), // comma-separated
+    discounts: text("discounts"), // comma-separated
+    // Legacy: per-session rates by duration. Superseded by hourlyRate/virtualHourlyRate below —
+    // left in place, unused going forward, same reasoning as the legacy fields just above.
     rate30: integer("rate_30"),
     rate60: integer("rate_60"),
     rate90: integer("rate_90"),
     rate120Plus: integer("rate_120_plus"),
+    // A single flat hourly rate for an in-person cuddle session — replaces the old per-duration
+    // rate table above. Null = "Contact Me" on the public page, same convention as before.
+    hourlyRate: integer("hourly_rate"),
+    // Whether this cuddler also offers virtual (video call) sessions, and if so, at what hourly
+    // rate. virtualHourlyRate is only ever read/shown when offersVirtual is true — null there means
+    // "Contact Me" for virtual sessions specifically, independent of the in-person rate above.
+    offersVirtual: integer("offers_virtual", { mode: "boolean" }).notNull().default(false),
+    virtualHourlyRate: integer("virtual_hourly_rate"),
     mobile: integer("mobile", { mode: "boolean" }).notNull().default(false),
+
+    // --- "Getting to know you" — a personality/lifestyle profile shown on the public listing so
+    // clients get a sense of who they'd actually be spending time with, not just session logistics.
+    // Every field here is optional free text (or a short pick-list where noted) and only ever shown
+    // on the public page when filled in — see the "Getting To Know Me" section in
+    // cuddlers/[slug]/page.tsx and the corresponding form section in dashboard/ListingForm.tsx.
+    favoriteFood: text("favorite_food"),
+    favoriteAnimal: text("favorite_animal"),
+    enjoysPets: text("enjoys_pets"), // "Yes" | "No" | "It Depends" | null — see ENJOYS_PETS_OPTIONS in lib/config.ts
+    allergies: text("allergies"),
+    favoriteMusic: text("favorite_music"), // artist or band
+    favoriteActivities: text("favorite_activities"), // "favorite things to do"
+    favoriteMovie: text("favorite_movie"),
+    favoriteShow: text("favorite_show"),
+    enjoysAboutCuddling: text("enjoys_about_cuddling"), // "what they enjoy about cuddling"
+    activeLifestyle: text("active_lifestyle"), // see ACTIVE_LIFESTYLE_OPTIONS in lib/config.ts
+    height: text("height"), // free text, e.g. 5'8" — formats vary too much for a clean dropdown
+    bodyType: text("body_type"), // see BODY_TYPE_OPTIONS in lib/config.ts
+    hairColor: text("hair_color"), // see HAIR_COLOR_OPTIONS in lib/config.ts
+    eyeColor: text("eye_color"), // see EYE_COLOR_OPTIONS in lib/config.ts
 
     // Location (primary)
     address: text("address"),
@@ -277,6 +313,10 @@ export const cuddlers = sqliteTable(
   })
 );
 
+// One row per open time block, up to HOUR_BLOCKS_PER_DAY (lib/config.ts) blocks per day — lets a
+// cuddler post a gap in the middle of a day (e.g. 9-10am, then 11am-1pm) instead of one single
+// open/close range. Only actual open blocks get a row; a day with zero rows is simply closed, so
+// there's no separate "closed" flag to keep in sync — see applyHoursUpdate in lib/listingUpdate.ts.
 export const cuddlerHours = sqliteTable(
   "cuddler_hours",
   {
@@ -285,9 +325,13 @@ export const cuddlerHours = sqliteTable(
       .notNull()
       .references(() => cuddlers.id, { onDelete: "cascade" }),
     dayOfWeek: integer("day_of_week").notNull(), // 0=Sun .. 6=Sat (JS Date#getDay convention)
-    closed: integer("closed", { mode: "boolean" }).notNull().default(true),
-    openTime: text("open_time"), // "HH:MM", 24h — null when closed
-    closeTime: text("close_time"), // "HH:MM", 24h — null when closed
+    blockIndex: integer("block_index").notNull().default(0), // 0 .. HOUR_BLOCKS_PER_DAY-1
+    // Legacy: every row used to represent a whole day (one row per day, closed=true meaning no
+    // hours set). Now every row is an actual open block (closed is always false going forward) —
+    // kept rather than dropped to avoid a SQLite column-drop migration.
+    closed: integer("closed", { mode: "boolean" }).notNull().default(false),
+    openTime: text("open_time").notNull(), // "HH:MM", 24h
+    closeTime: text("close_time").notNull(), // "HH:MM", 24h
   },
   (t) => ({
     dayIdx: index("cuddler_hours_day_idx").on(t.cuddlerId, t.dayOfWeek),

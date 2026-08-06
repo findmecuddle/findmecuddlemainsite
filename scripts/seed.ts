@@ -144,6 +144,7 @@ async function main() {
         email: d.email, passwordHash, name: d.name, slug: d.slug,
         headline: d.headline, bio: d.bio, services: d.services,
         rate30: d.rate30 ?? null, rate60: d.rate60 ?? null, rate90: d.rate90 ?? null, rate120Plus: d.rate120Plus ?? null,
+        hourlyRate: d.rate60 ?? d.rate30 ?? null,
         phone: d.phone, mobile: d.mobile,
         city: d.city, state: d.state, zip: d.zip, lat: d.lat, lng: d.lng,
         city2: d.city2 ?? null, state2: d.state2 ?? null, zip2: d.zip2 ?? null,

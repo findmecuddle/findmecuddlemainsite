@@ -130,26 +130,16 @@ export const WEEK_DAYS: { day: number; label: string }[] = [
   { day: 6, label: "Saturday" },
   { day: 0, label: "Sunday" },
 ];
+// Up to this many separate open time blocks per day (e.g. 9-10am, then 11am-1pm) — see
+// cuddlerHours in lib/schema.ts and HoursForm.tsx. A fixed cap keeps the hours form static (no
+// client-side add/remove-row JS needed) while still covering realistic gap-in-the-day schedules.
+export const HOUR_BLOCKS_PER_DAY = 3;
 
 // --- Rates ---
-// Session durations shown on the create-ad page. Each duration has three possible states, all
-// stored in the same nullable integer column (rate30/60/90/120Plus in schema.ts) — no separate
-// column needed:
-//   null              -> left blank, shown publicly as RATE_CONTACT_LABEL ("Contact Me")
-//   RATE_NOT_OFFERED  -> cuddler explicitly checked "I don't offer this" — the row is hidden
-//                        entirely from the public listing (see cuddlers/[slug]/page.tsx)
-//   a real number      -> shown as "$N"
-export const RATE_DURATIONS: { key: "rate30" | "rate60" | "rate90" | "rate120Plus"; label: string }[] = [
-  { key: "rate30", label: "30 min" },
-  { key: "rate60", label: "60 min" },
-  { key: "rate90", label: "90 min" },
-  { key: "rate120Plus", label: "2 hours+" },
-];
+// A single flat hourly rate for in-person sessions, plus an optional separate rate for virtual
+// (video call) sessions — see hourlyRate/offersVirtual/virtualHourlyRate in lib/schema.ts. Null in
+// either rate column means "no price set yet," shown publicly as RATE_CONTACT_LABEL.
 export const RATE_CONTACT_LABEL = "Contact Me";
-// Sentinel stored in a rate column to mean "I don't offer this duration at all" — distinct from
-// null, which means "no price set yet, show Contact Me." Any code reading a rate column for
-// display/min/max math must exclude this value (rate == null || rate === RATE_NOT_OFFERED).
-export const RATE_NOT_OFFERED = -1;
 
 // --- Gender (optional — see the `gender` comment on both cuddlers and agencyEmployees in
 // lib/schema.ts). Shown on listings and usable as a search filter (see nearbySearch.ts). ---
@@ -158,54 +148,14 @@ export const GENDER_OPTIONS: { value: "male" | "female"; label: string }[] = [
   { value: "male", label: "Male" },
 ];
 
-// --- Services ---
-// Checklist on the create-ad page. Cuddlers can also add anything not listed via a free-text
-// "other" field. These are the standard platonic, non-sexual comfort-touch session styles used by
-// professional cuddle therapy practitioners (see the certification bodies referenced in
-// VerificationForm.tsx) — every listing and Terms of Service is explicit that this is non-sexual.
-export const CUDDLE_TYPES: string[] = [
-  "Big Spoon / Little Spoon",
-  "Face-To-Face Embrace",
-  "Hand Holding & Conversation",
-  "Head Scratches / Head In Lap",
-  "Back Rubs (Non-Cuddle)",
-  "Breathwork & Cuddling",
-  "Comfort & Grief Support",
-  "Platonic Snuggling",
-  "Movie Cuddle Session",
-  "Nap Session",
-  "Group Cuddle",
-  "Mobile Cuddle Session",
-];
-
-// --- Amenities & add-ons ---
-// Checklist on the create-ad page, separate from session type (a service you offer vs. an
-// extra your space/session includes). Same free-text "other" pattern as services.
-export const AMENITIES: string[] = [
-  "Weighted Blanket",
-  "Fireplace",
-  "Movie / TV Available",
-  "Soft Music",
-  "Aromatherapy",
-  "Herbal Tea",
-  "Cozy Couch Setup",
-  "Pet-Friendly Space",
-  "Free Parking",
-  "Wheelchair Accessible",
-];
-
-// --- Payment methods accepted ---
-export const PAYMENT_METHODS: string[] = ["Cash", "Venmo", "Zelle", "Cash App", "Apple Pay", "Google Pay"];
-
-// --- Discounts & promotions ---
-export const DISCOUNT_TYPES: string[] = [
-  "First-Time Client Discount",
-  "Military Discount",
-  "Student Discount",
-  "Senior Discount",
-  "Referral Discount",
-  "Package Deal",
-];
+// --- "Getting to know you" pick-lists (see the matching columns on cuddlers in lib/schema.ts and
+// the form section in dashboard/ListingForm.tsx). Everything else in that section is free text;
+// these four are short enough, and common enough, to be worth a consistent dropdown instead. ---
+export const ENJOYS_PETS_OPTIONS: string[] = ["Yes", "No", "It Depends"];
+export const ACTIVE_LIFESTYLE_OPTIONS: string[] = ["Very Active / Athletic", "Moderately Active", "Not Very Active"];
+export const BODY_TYPE_OPTIONS: string[] = ["Slim", "Athletic", "Average", "Curvy", "Muscular", "Plus Size"];
+export const HAIR_COLOR_OPTIONS: string[] = ["Black", "Brown", "Blonde", "Red", "Gray / Silver", "Other"];
+export const EYE_COLOR_OPTIONS: string[] = ["Brown", "Blue", "Green", "Hazel", "Gray", "Other"];
 
 // --- Identity verification (license + government ID, required before publish) ---
 export const VERIFICATION_MAX_MB = 8;

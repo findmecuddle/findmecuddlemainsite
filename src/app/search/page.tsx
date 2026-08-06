@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { cuddlers, reviews, type Cuddler } from "@/lib/schema";
 import { resolveLocation } from "@/lib/geo";
 import Link from "next/link";
-import { DEFAULT_RADIUS_MILES, CUDDLE_TYPES, TOP_RATED_LIMIT, SEARCH_RESULTS_PER_PAGE } from "@/lib/config";
+import { DEFAULT_RADIUS_MILES, TOP_RATED_LIMIT, SEARCH_RESULTS_PER_PAGE } from "@/lib/config";
 import { isLive, isVip, isBoosted } from "@/lib/stripe";
 import { findNearbyCuddlers, weightedScore, type NearbyResult } from "@/lib/nearbySearch";
 import SearchBar from "@/components/SearchBar";
@@ -13,72 +13,48 @@ import ListingCard from "@/components/ListingCard";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Find A Cuddle Professional Or Agency Near You",
-  description: "Search independent, licensed cuddle professionals and agencies by zip code, city, or address.",
+  title: "Find A Cuddle Professional Near You",
+  description: "Search independent, certified cuddle professionals by zip code, city, or address.",
 };
 
 type Result = NearbyResult;
 
 export default async function SearchPage(
   props: {
-    searchParams: Promise<{ q?: string; radius?: string; types?: string; sort?: string; openNow?: string; page?: string; gender?: string; kind?: string }>;
+    searchParams: Promise<{ q?: string; radius?: string; page?: string; gender?: string }>;
   }
 ) {
   const searchParams = await props.searchParams;
   const q = searchParams.q ?? "";
   const radius = Math.min(parseInt(searchParams.radius ?? "", 10) || DEFAULT_RADIUS_MILES, 250);
   const origin = q ? resolveLocation(q) : null;
-  // Only accept known cuddle types — ignores anything tampered with in the URL.
-  const types = (searchParams.types ?? "")
-    .split(",")
-    .map((t) => t.trim())
-    .filter((t) => CUDDLE_TYPES.includes(t));
-  // "Top rated" mode: reached by clicking a service tag on a listing. Ranks by review quality
-  // instead of the boosted/VIP tiers — Featured/VIP/Verified badges still show on each card, they
-  // just don't affect the order here the way they do on a normal search.
-  const ratedSort = searchParams.sort === "rating";
-  const openNow = searchParams.openNow === "1";
   const gender = searchParams.gender === "male" || searchParams.gender === "female" ? searchParams.gender : null;
-  // "all" mixes cuddlers and agencies together like before; "solo"/"agency" narrows the main results to
-  // just that type, with up to 5 of the OTHER type surfaced below in "You Might Also Like" instead
-  // of being dropped entirely.
-  const kind = searchParams.kind === "solo" || searchParams.kind === "agency" ? searchParams.kind : "all";
-  const otherKind = kind === "solo" ? "agency" : "solo";
-  const kindNoun = kind === "agency" ? "agency" : kind === "solo" ? "cuddle professional" : "cuddler";
 
   let results: Result[] = [];
-  if (origin) results = await findNearbyCuddlers(origin, radius, types, ratedSort, openNow, gender);
+  if (origin) results = await findNearbyCuddlers(origin, radius, [], false, false, gender);
 
-  const primaryResults = kind === "all" ? results : results.filter((r) => r.t.accountType === kind);
-  const crossResults = kind === "all" ? [] : results.filter((r) => r.t.accountType === otherKind).slice(0, 5);
+  const primaryResults = results;
 
-  // Pagination — "Top rated" mode is already capped below SEARCH_RESULTS_PER_PAGE (TOP_RATED_LIMIT)
-  // so it never needs paging. A normal location search can otherwise return hundreds of results in
-  // a dense metro area, which is what this actually guards against.
-  const totalPages = ratedSort ? 1 : Math.max(1, Math.ceil(primaryResults.length / SEARCH_RESULTS_PER_PAGE));
+  // A normal location search can otherwise return hundreds of results in a dense metro area —
+  // this is what actually guards against that.
+  const totalPages = Math.max(1, Math.ceil(primaryResults.length / SEARCH_RESULTS_PER_PAGE));
   const page = Math.min(Math.max(parseInt(searchParams.page ?? "", 10) || 1, 1), totalPages);
-  const pagedResults = ratedSort
-    ? primaryResults
-    : primaryResults.slice((page - 1) * SEARCH_RESULTS_PER_PAGE, page * SEARCH_RESULTS_PER_PAGE);
+  const pagedResults = primaryResults.slice((page - 1) * SEARCH_RESULTS_PER_PAGE, page * SEARCH_RESULTS_PER_PAGE);
 
   // Rebuilds the current search URL with just the page number changed — keeps every other filter
-  // (location, radius, types, sort, openNow, kind) intact when moving between pages.
+  // (location, radius, gender) intact when moving between pages.
   function pageHref(target: number) {
     const qs = new URLSearchParams();
     qs.set("q", q);
     qs.set("radius", String(radius));
-    if (types.length) qs.set("types", types.join(","));
-    if (ratedSort) qs.set("sort", "rating");
-    if (openNow) qs.set("openNow", "1");
     if (gender) qs.set("gender", gender);
-    if (kind !== "all") qs.set("kind", kind);
     if (target > 1) qs.set("page", String(target));
     return `/search?${qs.toString()}`;
   }
 
   // No location entered yet (or it didn't resolve) — this is the state landed on from the
   // homepage's "Browse Cuddlers" link. Show a nationwide showcase instead of a dead end.
-  const browse = !origin ? await browseTopCuddlers(kind) : null;
+  const browse = !origin ? await browseTopCuddlers() : null;
 
   return (
     <div className="container-page py-8 sm:py-12">
@@ -134,28 +110,11 @@ export default async function SearchPage(
       {origin && (
         <>
           <p className="mt-8 text-sm text-stone2">
-            {ratedSort ? (
+            {primaryResults.length} cuddler{primaryResults.length === 1 ? "" : "s"} within {radius} miles of{" "}
+            <span className="font-medium text-ink">{origin.label}</span>
+            {gender && (
               <>
-                Top {results.length < TOP_RATED_LIMIT ? results.length : `${TOP_RATED_LIMIT}`}{" "}
-                <span className="font-medium text-ink">{types.join(", ") || "rated"}</span> cuddlers near{" "}
-                <span className="font-medium text-ink">{origin.label}</span>, by client reviews
-              </>
-            ) : (
-              <>
-                {primaryResults.length} {kindNoun}
-                {primaryResults.length === 1 ? "" : "s"} within {radius} miles of{" "}
-                <span className="font-medium text-ink">{origin.label}</span>
-                {types.length > 0 && (
-                  <>
-                    {" "}offering <span className="font-medium text-ink">{types.join(", ")}</span>
-                  </>
-                )}
-                {gender && (
-                  <>
-                    {" "}· <span className="font-medium text-ink">{gender}</span>
-                  </>
-                )}
-                {openNow && <> · <span className="font-medium text-ink">open now</span></>}
+                {" "}· <span className="font-medium text-ink">{gender}</span>
               </>
             )}
           </p>
@@ -163,9 +122,7 @@ export default async function SearchPage(
             <div className="card mt-4 max-w-xl p-6">
               <h2 className="font-display text-lg font-semibold">No listings here yet</h2>
               <p className="mt-2 text-sm text-stone2">
-                {ratedSort
-                  ? "No one nearby has enough reviews for this yet — check back soon, or browse all listings for this service."
-                  : `Try widening the radius${types.length > 0 ? ", removing a cuddle type filter," : ""}${openNow ? ", turning off Open Now," : ""}${kind !== "all" ? ", switching Cuddlers/Agencies above," : ""} or searching a nearby city.`}
+                Try widening the radius or searching a nearby city.
               </p>
             </div>
           ) : (
@@ -202,32 +159,6 @@ export default async function SearchPage(
               )}
             </>
           )}
-
-          {/* Cross-promotion for the type the user filtered out — shown regardless of whether the
-              primary list came up empty, since a "Agencies Only" search with zero agencies nearby is exactly
-              when surfacing nearby cuddlers is most useful. Capped at 5, not paginated. */}
-          {kind !== "all" && crossResults.length > 0 && (
-            <div className="mt-10 border-t border-line pt-8">
-              <h2 className="font-display text-lg font-semibold">
-                You Might Also Like{kind === "solo" ? " These Agencies" : " These Cuddle Professionals"}
-              </h2>
-              <ul className="mt-4 grid gap-4">
-                {crossResults.map((r) => (
-                  <li key={r.t.id}>
-                    <ListingCard
-                      cuddler={r.t}
-                      distance={r.distance}
-                      city={r.matchedCity}
-                      state={r.matchedState}
-                      avgRating={r.avgRating}
-                      reviewCount={r.reviewCount}
-                      openNow={r.openNow}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </>
       )}
     </div>
@@ -241,13 +172,11 @@ type BrowseEntry = { t: Cuddler; avgRating: number; reviewCount: number };
  * "Browse Cuddlers" on the homepage. No distance/radius applies here, so this pulls from
  * every live listing rather than a geo bounding box.
  */
-async function browseTopCuddlers(kind: "all" | "solo" | "agency"): Promise<{ vip: BrowseEntry[]; rated: BrowseEntry[] }> {
-  const conditions = [eq(cuddlers.published, true), eq(cuddlers.subStatus, "active")];
-  if (kind !== "all") conditions.push(eq(cuddlers.accountType, kind));
+async function browseTopCuddlers(): Promise<{ vip: BrowseEntry[]; rated: BrowseEntry[] }> {
   const candidates = await db
     .select()
     .from(cuddlers)
-    .where(and(...conditions));
+    .where(and(eq(cuddlers.published, true), eq(cuddlers.subStatus, "active")));
 
   const live = candidates.filter(isLive);
   if (live.length === 0) return { vip: [], rated: [] };

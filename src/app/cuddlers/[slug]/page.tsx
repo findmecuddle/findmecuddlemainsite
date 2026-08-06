@@ -12,7 +12,7 @@ import { formatTime12 } from "@/lib/time";
 import { isOpenNow, hasAnyHours, isManuallyOpen } from "@/lib/hours";
 import { parseEmployeeHours } from "@/lib/employeeHours";
 import { parseSocialLinks } from "@/lib/socialLinks";
-import { RATE_DURATIONS, RATE_CONTACT_LABEL, RATE_NOT_OFFERED, SMS_TEMPLATE, SITE_NAME, SITE_URL, WEEK_DAYS } from "@/lib/config";
+import { RATE_CONTACT_LABEL, SMS_TEMPLATE, SITE_NAME, SITE_URL, WEEK_DAYS } from "@/lib/config";
 import { smsHref } from "@/lib/sms";
 import ReviewForm from "@/components/ReviewForm";
 import ReportForm from "@/components/ReportForm";
@@ -54,9 +54,9 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
   // Only gate Call/Text on hours if the cuddler actually set any — leaves contact wide open
   // (as it's always been) for the many listings that left this optional field blank, rather than
   // silently locking everyone out who hasn't filled it in.
-  const hourRows = hours
-    .filter((h) => h.row)
-    .map((h) => ({ dayOfWeek: h.day, closed: h.row!.closed, openTime: h.row!.openTime, closeTime: h.row!.closeTime }));
+  const hourRows = hours.flatMap((h) =>
+    h.blocks.map((b) => ({ dayOfWeek: h.day, openTime: b.openTime!, closeTime: b.closeTime! }))
+  );
   const hasHours = hasAnyHours(hourRows);
   // openNow reflects reality (for the badge below) regardless of the gatekeeping toggle — it's
   // only contactLocked that decides whether Call/Text actually get hidden. No hours listed and no
@@ -75,10 +75,23 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
       ? approvedReviews.reduce((sum, r) => sum + r.rating, 0) / approvedReviews.length
       : null;
 
-  const services = (t.services ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const amenities = (t.amenities ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const paymentMethods = (t.paymentMethods ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const discounts = (t.discounts ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  // "Getting to know you" — only ever shown as label: value pairs for whichever fields the
+  // cuddler actually filled in (see the matching columns' comments in lib/schema.ts).
+  const gettingToKnowYou: { label: string; value: string }[] = [
+    { label: "Favorite Food", value: t.favoriteFood ?? "" },
+    { label: "Favorite Animal", value: t.favoriteAnimal ?? "" },
+    { label: "Enjoys Pets", value: t.enjoysPets ?? "" },
+    { label: "Allergies", value: t.allergies ?? "" },
+    { label: "Favorite Music", value: t.favoriteMusic ?? "" },
+    { label: "Favorite Things To Do", value: t.favoriteActivities ?? "" },
+    { label: "Favorite Movie", value: t.favoriteMovie ?? "" },
+    { label: "Favorite TV Show", value: t.favoriteShow ?? "" },
+    { label: "Activity Level", value: t.activeLifestyle ?? "" },
+    { label: "Height", value: t.height ?? "" },
+    { label: "Body Type", value: t.bodyType ?? "" },
+    { label: "Hair Color", value: t.hairColor ?? "" },
+    { label: "Eye Color", value: t.eyeColor ?? "" },
+  ].filter((f) => f.value);
   const agencyAccount = isAgencyAccount(t);
   const employees = agencyAccount
     ? await db
@@ -116,17 +129,10 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
   // it applies fine to both solo and agency accounts, since either way this is a bookable local
   // business. Every field mirrors the same visibility rules as the page itself below (e.g.
   // telephone/email are omitted under Site Messages Only, same as the Call/Text/Email buttons).
-  const validRates = [t.rate30, t.rate60, t.rate90, t.rate120Plus].filter(
-    (r): r is number => r != null && r !== RATE_NOT_OFFERED
-  );
-  const priceRange = validRates.length
-    ? validRates.length > 1
-      ? `$${Math.min(...validRates)}-$${Math.max(...validRates)}`
-      : `$${validRates[0]}`
-    : undefined;
+  const priceRange = t.hourlyRate != null ? `$${t.hourlyRate}/hr` : undefined;
   const canShowPhone = !t.messagesOnly && (t.acceptsCalls || t.acceptsTexts) && !!t.phone;
   const canShowEmail = !t.messagesOnly && t.acceptsEmail && !!t.contactEmail;
-  const openHours = hourRows.filter((h) => !h.closed && h.openTime && h.closeTime);
+  const openHours = hourRows;
   const socialLinks = parseSocialLinks(t.socialLinks);
   const jsonLd = {
     "@context": "https://schema.org",
@@ -260,37 +266,17 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
             </div>
           )}
 
-          {services.length > 0 && (
+          {gettingToKnowYou.length > 0 && (
             <div className="mt-8">
-              <h2 className="font-display text-xl font-semibold">Services</h2>
-              <p className="mt-1 text-xs text-stone2">Tap a service to see top-rated providers near {t.city}.</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {services.map((s) => (
-                  <Link
-                    key={s}
-                    href={`/search?q=${encodeURIComponent(t.zip || `${t.city}, ${t.state}`)}&types=${encodeURIComponent(s)}&sort=rating`}
-                    className="rounded-full border border-line bg-white px-3 py-1 text-sm transition-colors hover:border-spruce hover:text-spruce"
-                  >
-                    {s}
-                  </Link>
+              <h2 className="font-display text-xl font-semibold">Getting To Know Me</h2>
+              <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+                {gettingToKnowYou.map((f) => (
+                  <div key={f.label} className="flex items-baseline justify-between gap-3 border-b border-line/60 pb-1.5 text-sm sm:justify-start">
+                    <dt className="text-stone2">{f.label}</dt>
+                    <dd className="text-right font-medium text-ink sm:ml-auto sm:text-left">{f.value}</dd>
+                  </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          {amenities.length > 0 && (
-            <div className="mt-8">
-              <h2 className="font-display text-xl font-semibold">Amenities &amp; Add-Ons</h2>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {amenities.map((a) => (
-                  <span
-                    key={a}
-                    className="rounded-full border border-line bg-white px-3 py-1 text-sm text-ink/90"
-                  >
-                    {a}
-                  </span>
-                ))}
-              </div>
+              </dl>
             </div>
           )}
 
@@ -384,17 +370,20 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
           <h2 className="font-display text-lg font-semibold">Book A Session</h2>
           {!agencyAccount && (
             <ul className="mt-2 grid gap-1 text-sm">
-              {RATE_DURATIONS.filter(({ key }) => t[key] !== RATE_NOT_OFFERED).map(({ key, label }) => {
-                const rate = t[key];
-                return (
-                  <li key={key} className="flex justify-between">
-                    <span className="text-stone2">{label}</span>
-                    <span className={rate != null ? "font-medium text-ink" : "text-stone2"}>
-                      {rate != null ? `$${rate}` : RATE_CONTACT_LABEL}
-                    </span>
-                  </li>
-                );
-              })}
+              <li className="flex justify-between">
+                <span className="text-stone2">In-Person, Per Hour</span>
+                <span className={t.hourlyRate != null ? "font-medium text-ink" : "text-stone2"}>
+                  {t.hourlyRate != null ? `$${t.hourlyRate}` : RATE_CONTACT_LABEL}
+                </span>
+              </li>
+              {t.offersVirtual && (
+                <li className="flex justify-between">
+                  <span className="text-stone2">Virtual, Per Hour</span>
+                  <span className={t.virtualHourlyRate != null ? "font-medium text-ink" : "text-stone2"}>
+                    {t.virtualHourlyRate != null ? `$${t.virtualHourlyRate}` : RATE_CONTACT_LABEL}
+                  </span>
+                </li>
+              )}
             </ul>
           )}
           <p className="mt-3 text-sm text-stone2">{t.city}, {t.state} {t.zip}</p>
@@ -402,32 +391,6 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
             <p className="mt-1 text-sm text-stone2">
               <span className="text-stone2">Also serving:</span> {t.city2}, {t.state2} {t.zip2}
             </p>
-          )}
-
-          {discounts.length > 0 && (
-            <div className="mt-4 border-t border-line pt-4">
-              <h3 className="text-sm font-semibold">Discounts &amp; Promotions</h3>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {discounts.map((d) => (
-                  <span key={d} className="rounded-full bg-gold/10 px-2.5 py-0.5 text-xs font-medium text-gold">
-                    {d}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {paymentMethods.length > 0 && (
-            <div className="mt-4 border-t border-line pt-4">
-              <h3 className="text-sm font-semibold">Payment Methods</h3>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {paymentMethods.map((p) => (
-                  <span key={p} className="rounded-full border border-line bg-white px-2.5 py-0.5 text-xs text-ink/90">
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
           )}
 
           {websiteApproved(t) && (
@@ -487,12 +450,14 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
                 )}
               </div>
               <ul className="mt-2 grid gap-1 text-sm">
-                {hours.map(({ day, label, row }) => (
+                {hours.map(({ day, label, blocks }) => (
                   <li key={day} className="flex justify-between text-stone2">
                     <span>{label}</span>
-                    <span className={row && !row.closed ? "text-ink" : ""}>
-                      {row && !row.closed
-                        ? `${formatTime12(row.openTime) ?? "?"} – ${formatTime12(row.closeTime) ?? "?"}`
+                    <span className={blocks.length > 0 ? "text-ink" : ""}>
+                      {blocks.length > 0
+                        ? blocks
+                            .map((b) => `${formatTime12(b.openTime) ?? "?"} – ${formatTime12(b.closeTime) ?? "?"}`)
+                            .join(", ")
                         : "Closed"}
                     </span>
                   </li>

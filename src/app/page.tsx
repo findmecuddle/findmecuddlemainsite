@@ -196,10 +196,9 @@ export default async function HomePage() {
 
       <section className="bg-white">
         <div className="container-page py-14">
-          <h3 className="font-display text-lg font-semibold">Are You A Cuddler Or Agency?</h3>
+          <h3 className="font-display text-lg font-semibold">Are You A Cuddler?</h3>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-stone2">
-            Advertise on {SITE_NAME} with a Weekly, Monthly, or Monthly VIP listing, or a Small or
-            Large Agency plan for a team of cuddlers.
+            Advertise on {SITE_NAME} with a Standard or VIP listing.
           </p>
           <Link href="/pricing" className="mt-3 inline-block text-sm font-medium text-spruce hover:underline">
             See listing plans →

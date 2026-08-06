@@ -7,8 +7,8 @@ import { stripe } from "@/lib/stripe";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Advertise Your Cuddle Practice Or Agency",
-  description: "List your independent cuddle therapy practice or agency on Find Me Cuddle. Standard, VIP, or Agency plans, no commission on bookings.",
+  title: "Advertise Your Cuddle Practice",
+  description: "List your independent cuddle therapy practice on Find Me Cuddle. Standard or VIP plans, no commission on bookings.",
 };
 
 const WHY_ADVERTISE = [
@@ -74,20 +74,6 @@ export default async function PricingPage() {
     },
   ];
 
-  const agencyPlans = [
-    {
-      key: "small_agency",
-      name: "Small Agency",
-      blurb: "For teams of 1-3 cuddlers. One listing for your whole agency, with each employee's own photo, hours, and session types.",
-    },
-    {
-      key: "large_agency",
-      name: "Large Agency",
-      blurb: "For teams of 4-8 cuddlers. Everything in Small Agency, sized for a bigger roster.",
-      featured: true,
-    },
-  ];
-
   return (
     <div className="container-page py-14">
       <div className="max-w-2xl">
@@ -140,41 +126,6 @@ export default async function PricingPage() {
             </Link>
           </div>
         ))}
-      </div>
-
-      <div className="mt-12">
-        <h2 className="font-display text-2xl font-semibold">For Agencies &amp; Multi-Cuddler Businesses</h2>
-        <p className="mt-2 max-w-2xl text-stone2">
-          One listing for your whole team. Add each employee with their own photo, hours, and session
-          types, all managed from a single owner login.
-        </p>
-        <div className="mt-6 grid gap-5 sm:grid-cols-2">
-          {agencyPlans.map((p) => (
-            <div key={p.key} className={`card flex flex-col p-6 ${p.featured ? "border-spruce" : ""}`}>
-              {p.featured && (
-                <span className="mb-3 w-fit rounded-full bg-spruce-tint px-2.5 py-0.5 text-[11px] font-medium text-spruce">
-                  Best Value
-                </span>
-              )}
-              <h3 className="font-display text-xl font-semibold">{p.name}</h3>
-              {prices[p.key] && (
-                <p className="mt-2 flex items-baseline gap-1.5">
-                  <span className="font-display text-2xl font-semibold text-ink">
-                    ${prices[p.key]!.amount.toFixed(0)}
-                  </span>
-                  <span className="text-sm text-stone2">/ month</span>
-                  <span className="text-xs text-stone2">
-                    (${prices[p.key]!.perDay.toFixed(2)}/day)
-                  </span>
-                </p>
-              )}
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-stone2">{p.blurb}</p>
-              <Link href={cta} className={`${p.featured ? "btn-primary" : "btn-ghost"} mt-5 w-full`}>
-                {me ? "Choose In Dashboard" : "Get Started"}
-              </Link>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="mt-12 card p-6">

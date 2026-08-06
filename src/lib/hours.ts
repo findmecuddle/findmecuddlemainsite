@@ -39,28 +39,27 @@ function nowInState(state: string | null | undefined): { day: number; hm: string
   return { day: DAY_MAP[weekday] ?? 0, hm: `${hour}:${minute}` };
 }
 
+// One entry per open time block (see cuddlerHours in lib/schema.ts) — a day with no blocks is
+// simply closed, so there's no separate "closed" flag here anymore.
 export type HourRow = {
   dayOfWeek: number;
-  closed: boolean;
-  openTime: string | null;
-  closeTime: string | null;
+  openTime: string;
+  closeTime: string;
 };
 
 /**
  * True if right now — in the cuddler's own state's local time, not the visitor's or the
- * server's — falls within one of their configured open windows. Same-day ranges only (close time
- * after open time), matching the assumption the rest of the hours UI already makes.
+ * server's — falls within ANY of their configured open blocks for today. Same-day ranges only
+ * (close time after open time), matching the assumption the rest of the hours UI already makes.
  */
 export function isOpenNow(rows: HourRow[], state: string | null | undefined): boolean {
   const { day, hm } = nowInState(state);
-  const today = rows.find((r) => r.dayOfWeek === day);
-  if (!today || today.closed || !today.openTime || !today.closeTime) return false;
-  return hm >= today.openTime && hm <= today.closeTime;
+  return rows.some((r) => r.dayOfWeek === day && hm >= r.openTime && hm <= r.closeTime);
 }
 
 /** True if the cuddler has entered any hours at all (vs. leaving the optional field blank). */
 export function hasAnyHours(rows: HourRow[]): boolean {
-  return rows.some((r) => !r.closed && r.openTime && r.closeTime);
+  return rows.length > 0;
 }
 
 /** True only while a manual "I'm Open Now" activation is still within MANUAL_OPEN_NOW_HOURS —

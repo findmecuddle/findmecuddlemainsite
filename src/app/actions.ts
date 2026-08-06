@@ -397,13 +397,19 @@ export async function getHours(cuddlerId: string) {
     .select()
     .from(cuddlerHours)
     .where(eq(cuddlerHours.cuddlerId, cuddlerId))
-    .orderBy(asc(cuddlerHours.dayOfWeek));
-  const byDay = new Map(rows.map((r) => [r.dayOfWeek, r]));
-  // Always return one entry per day, in Monday-first display order, even if unsaved yet.
+    .orderBy(asc(cuddlerHours.dayOfWeek), asc(cuddlerHours.blockIndex));
+  const byDay = new Map<number, typeof rows>();
+  for (const r of rows) {
+    const list = byDay.get(r.dayOfWeek) ?? [];
+    list.push(r);
+    byDay.set(r.dayOfWeek, list);
+  }
+  // Always return one entry per day, in Monday-first display order, even if unsaved yet — each
+  // with its list of open blocks (empty array = closed all day).
   return WEEK_DAYS.map(({ day, label }) => ({
     day,
     label,
-    row: byDay.get(day) ?? null,
+    blocks: byDay.get(day) ?? [],
   }));
 }
 
@@ -515,9 +521,9 @@ export async function saveEmployee(
   const name = String(formData.get("name") || "").trim();
   if (!name) return { error: "Enter a name." };
 
-  const services = formData
-    .getAll("services")
-    .map((v) => String(v).trim())
+  const services = String(formData.get("servicesText") || "")
+    .split(",")
+    .map((v) => v.trim())
     .filter(Boolean)
     .join(", ") || null;
   const hoursJson = buildEmployeeHoursJson(formData);

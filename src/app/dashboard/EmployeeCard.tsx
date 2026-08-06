@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useFormState } from "react-dom";
 import { saveEmployee, removeEmployee } from "@/app/actions";
-import { CUDDLE_TYPES, WEEK_DAYS, GENDER_OPTIONS } from "@/lib/config";
+import { WEEK_DAYS, GENDER_OPTIONS } from "@/lib/config";
 import { parseEmployeeHours } from "@/lib/employeeHours";
 import type { AgencyEmployee } from "@/lib/schema";
 import EmployeePhotoUploader from "./EmployeePhotoUploader";
@@ -14,7 +14,8 @@ import EmployeePhotoUploader from "./EmployeePhotoUploader";
 export default function EmployeeCard({ employee }: { employee?: AgencyEmployee }) {
   const [open, setOpen] = useState(!employee);
   const [state, action] = useFormState(saveEmployee, null as null | { error?: string; ok?: string });
-  const selectedServices = (employee?.services ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const servicesText = employee?.services ?? "";
+  const selectedServices = servicesText.split(",").map((s) => s.trim()).filter(Boolean);
   const hours = parseEmployeeHours(employee?.hoursJson);
 
   // Collapsed summary card — click Edit to expand into the full form below.
@@ -76,21 +77,14 @@ export default function EmployeeCard({ employee }: { employee?: AgencyEmployee }
         </div>
 
         <div>
-          <label className="label">Cuddle Types Offered</label>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-            {CUDDLE_TYPES.map((type) => (
-              <label key={type} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="services"
-                  value={type}
-                  defaultChecked={selectedServices.includes(type)}
-                  className="h-4 w-4 accent-spruce"
-                />
-                {type}
-              </label>
-            ))}
-          </div>
+          <label className="label" htmlFor={`services-${employee?.id ?? "new"}`}>Services (Comma Separated)</label>
+          <input
+            id={`services-${employee?.id ?? "new"}`}
+            name="servicesText"
+            defaultValue={servicesText}
+            className="field"
+            placeholder="e.g. Big Spoon / Little Spoon, Hand Holding & Conversation"
+          />
         </div>
 
         <div>

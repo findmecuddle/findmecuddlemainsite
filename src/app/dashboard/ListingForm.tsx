@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { ClientSafeCuddler } from "@/lib/auth";
 import { updateListing } from "@/app/actions";
 import { isVip, photoLimit } from "@/lib/stripe";
-import { RATE_DURATIONS, RATE_CONTACT_LABEL, RATE_NOT_OFFERED, CUDDLE_TYPES, AMENITIES, PAYMENT_METHODS, DISCOUNT_TYPES, WEBSITE_URL_MAX_CHARS, GENDER_OPTIONS, SOCIAL_PLATFORMS, SOCIAL_LINKS_MAX, SOCIAL_URL_MAX_CHARS } from "@/lib/config";
+import { RATE_CONTACT_LABEL, WEBSITE_URL_MAX_CHARS, GENDER_OPTIONS, SOCIAL_PLATFORMS, SOCIAL_LINKS_MAX, SOCIAL_URL_MAX_CHARS, ENJOYS_PETS_OPTIONS, ACTIVE_LIFESTYLE_OPTIONS, BODY_TYPE_OPTIONS, HAIR_COLOR_OPTIONS, EYE_COLOR_OPTIONS } from "@/lib/config";
 import { parseSocialLinks } from "@/lib/socialLinks";
 import PhotoUploader from "./PhotoUploader";
 
@@ -42,14 +42,7 @@ export default function ListingForm({
 
   const vip = isVip(t);
   const agencyAccount = t.accountType === "agency";
-  const selectedServices = (t.services ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const otherServices = selectedServices.filter((s) => !CUDDLE_TYPES.includes(s));
-  const selectedAmenities = (t.amenities ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const otherAmenities = selectedAmenities.filter((a) => !AMENITIES.includes(a));
-  const selectedPayments = (t.paymentMethods ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const otherPayments = selectedPayments.filter((p) => !PAYMENT_METHODS.includes(p));
-  const selectedDiscounts = (t.discounts ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  const otherDiscounts = selectedDiscounts.filter((d) => !DISCOUNT_TYPES.includes(d));
+  const [offersVirtual, setOffersVirtual] = useState(t.offersVirtual);
 
   // Pad out to SOCIAL_LINKS_MAX rows so the form always renders a fixed number of platform/URL
   // pairs regardless of how many the cuddler has actually filled in — see socialLinks.ts.
@@ -74,20 +67,6 @@ export default function ListingForm({
       setAcceptsTexts(false);
       setAcceptsEmail(false);
     }
-  }
-
-  // Which rate durations are marked "I don't offer this" — starts from whatever's already stored
-  // (RATE_NOT_OFFERED sentinel) so re-opening the form shows the checkbox already checked.
-  const [notOffered, setNotOffered] = useState<Set<string>>(
-    new Set(RATE_DURATIONS.filter(({ key }) => t[key] === RATE_NOT_OFFERED).map(({ key }) => key))
-  );
-  function toggleNotOffered(key: string, checked: boolean) {
-    setNotOffered((prev) => {
-      const next = new Set(prev);
-      if (checked) next.add(key);
-      else next.delete(key);
-      return next;
-    });
   }
 
   return (
@@ -197,160 +176,160 @@ export default function ListingForm({
           } />
       </div>
 
-      {agencyAccount ? (
-        <div className="border-t border-line pt-4">
-          <p className="text-xs text-stone2">
-            Cuddle types are set per team member in the &ldquo;Your Team&rdquo; section below — they
-            automatically show up on your public listing.
-          </p>
-          <label className="mt-3 flex items-center gap-2 text-sm">
-            <input type="checkbox" name="mobile" defaultChecked={t.mobile} className="h-4 w-4 accent-spruce" />
-            Mobile Session (We Travel To The Client)
-          </label>
-        </div>
-      ) : (
-        <div>
-          <label className="label">Services</label>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-            {CUDDLE_TYPES.map((type) => (
-              <label key={type} className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="services"
-                  value={type}
-                  defaultChecked={selectedServices.includes(type)}
-                  className="h-4 w-4 accent-spruce"
-                />
-                {type}
-              </label>
-            ))}
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="mobile" defaultChecked={t.mobile} className="h-4 w-4 accent-spruce" />
-              Mobile Session (I Travel To The Client)
-            </label>
-          </div>
-          <input
-            name="servicesOther"
-            defaultValue={otherServices.join(", ")}
-            className="field mt-3"
-            placeholder="Other (comma separated) — anything not listed above"
-          />
-        </div>
-      )}
-
-      <div>
-        <label className="label">Amenities &amp; Add-Ons</label>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-          {AMENITIES.map((item) => (
-            <label key={item} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="amenities"
-                value={item}
-                defaultChecked={selectedAmenities.includes(item)}
-                className="h-4 w-4 accent-spruce"
-              />
-              {item}
-            </label>
-          ))}
-        </div>
-        <input
-          name="amenitiesOther"
-          defaultValue={otherAmenities.join(", ")}
-          className="field mt-3"
-          placeholder="Other (comma separated) — anything not listed above"
-        />
-      </div>
-
-      <div>
-        <label className="label">Payment Methods Accepted</label>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-          {PAYMENT_METHODS.map((method) => (
-            <label key={method} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="paymentMethods"
-                value={method}
-                defaultChecked={selectedPayments.includes(method)}
-                className="h-4 w-4 accent-spruce"
-              />
-              {method}
-            </label>
-          ))}
-        </div>
-        <input
-          name="paymentMethodsOther"
-          defaultValue={otherPayments.join(", ")}
-          className="field mt-3"
-          placeholder="Other (comma separated) — anything not listed above"
-        />
-      </div>
-
-      <div>
-        <label className="label">Discounts &amp; Promotions</label>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-          {DISCOUNT_TYPES.map((type) => (
-            <label key={type} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                name="discounts"
-                value={type}
-                defaultChecked={selectedDiscounts.includes(type)}
-                className="h-4 w-4 accent-spruce"
-              />
-              {type}
-            </label>
-          ))}
-        </div>
-        <input
-          name="discountsOther"
-          defaultValue={otherDiscounts.join(", ")}
-          className="field mt-3"
-          placeholder="Other (comma separated) — e.g. &quot;10% off for teachers&quot;"
-        />
+      <div className="border-t border-line pt-4">
+        <label className="mt-3 flex items-center gap-2 text-sm">
+          <input type="checkbox" name="mobile" defaultChecked={t.mobile} className="h-4 w-4 accent-spruce" />
+          {agencyAccount ? "Mobile Session (We Travel To The Client)" : "Mobile Session (I Travel To The Client)"}
+        </label>
       </div>
 
       {!agencyAccount && (
-        <div>
+        <div className="border-t border-line pt-4">
           <label className="label">
-            Rates (Leave Blank To Show "{RATE_CONTACT_LABEL}" For That Length, Or Check "I Don&rsquo;t
-            Offer This" To Remove It From Your Listing)
+            Rates (Leave Blank To Show "{RATE_CONTACT_LABEL}")
           </label>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {RATE_DURATIONS.map(({ key, label }) => {
-              const isNotOffered = notOffered.has(key);
-              const storedRate = t[key] === RATE_NOT_OFFERED ? "" : t[key] ?? "";
-              return (
-                <div key={key}>
-                  <label className="mb-1 block text-xs text-stone2" htmlFor={key}>{label}</label>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone2">$</span>
-                    <input
-                      id={key}
-                      name={key}
-                      type="number"
-                      min={0}
-                      step={1}
-                      inputMode="numeric"
-                      defaultValue={storedRate}
-                      placeholder={RATE_CONTACT_LABEL}
-                      disabled={isNotOffered}
-                      className="field pl-6 disabled:bg-porcelain disabled:text-stone2"
-                    />
-                  </div>
-                  <label className="mt-1.5 flex items-center gap-1.5 text-xs text-stone2">
-                    <input
-                      type="checkbox"
-                      name={`${key}NotOffered`}
-                      checked={isNotOffered}
-                      onChange={(e) => toggleNotOffered(key, e.target.checked)}
-                      className="h-3.5 w-3.5 accent-spruce"
-                    />
-                    I Don&rsquo;t Offer This
-                  </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs text-stone2" htmlFor="hourlyRate">Hourly Rate (In-Person)</label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone2">$</span>
+                <input
+                  id="hourlyRate"
+                  name="hourlyRate"
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  defaultValue={t.hourlyRate ?? ""}
+                  placeholder={RATE_CONTACT_LABEL}
+                  className="field pl-6"
+                />
+              </div>
+            </div>
+            {offersVirtual && (
+              <div>
+                <label className="mb-1 block text-xs text-stone2" htmlFor="virtualHourlyRate">Hourly Rate (Virtual)</label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-stone2">$</span>
+                  <input
+                    id="virtualHourlyRate"
+                    name="virtualHourlyRate"
+                    type="number"
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    defaultValue={t.virtualHourlyRate ?? ""}
+                    placeholder={RATE_CONTACT_LABEL}
+                    className="field pl-6"
+                  />
                 </div>
-              );
-            })}
+              </div>
+            )}
+          </div>
+          <label className="mt-3 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="offersVirtual"
+              checked={offersVirtual}
+              onChange={(e) => setOffersVirtual(e.target.checked)}
+              className="h-4 w-4 accent-spruce"
+            />
+            I Also Offer Virtual (Video Call) Sessions
+          </label>
+        </div>
+      )}
+
+      {!agencyAccount && (
+        <div className="border-t border-line pt-4">
+          <label className="label">Getting To Know You</label>
+          <p className="mt-1 text-xs text-stone2">
+            Optional — helps clients get a sense of who you are beyond the logistics. Shown on your
+            public listing only for whichever fields you fill in.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="label" htmlFor="favoriteFood">Favorite Food</label>
+              <input id="favoriteFood" name="favoriteFood" defaultValue={t.favoriteFood ?? ""} className="field" />
+            </div>
+            <div>
+              <label className="label" htmlFor="favoriteAnimal">Favorite Animal</label>
+              <input id="favoriteAnimal" name="favoriteAnimal" defaultValue={t.favoriteAnimal ?? ""} className="field" />
+            </div>
+            <div>
+              <label className="label" htmlFor="enjoysPets">Do You Enjoy Pets?</label>
+              <select id="enjoysPets" name="enjoysPets" defaultValue={t.enjoysPets ?? ""} className="field">
+                <option value="">Prefer not to say</option>
+                {ENJOYS_PETS_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="allergies">Allergies</label>
+              <input id="allergies" name="allergies" defaultValue={t.allergies ?? ""} className="field" placeholder="None, or list any" />
+            </div>
+            <div>
+              <label className="label" htmlFor="favoriteMusic">Favorite Music (Artist Or Band)</label>
+              <input id="favoriteMusic" name="favoriteMusic" defaultValue={t.favoriteMusic ?? ""} className="field" />
+            </div>
+            <div>
+              <label className="label" htmlFor="favoriteMovie">Favorite Movie</label>
+              <input id="favoriteMovie" name="favoriteMovie" defaultValue={t.favoriteMovie ?? ""} className="field" />
+            </div>
+            <div>
+              <label className="label" htmlFor="favoriteShow">Favorite TV Show</label>
+              <input id="favoriteShow" name="favoriteShow" defaultValue={t.favoriteShow ?? ""} className="field" />
+            </div>
+            <div>
+              <label className="label" htmlFor="activeLifestyle">Activity Level</label>
+              <select id="activeLifestyle" name="activeLifestyle" defaultValue={t.activeLifestyle ?? ""} className="field">
+                <option value="">Prefer not to say</option>
+                {ACTIVE_LIFESTYLE_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="height">Height</label>
+              <input id="height" name="height" defaultValue={t.height ?? ""} className="field" placeholder={"e.g. 5'8\""} maxLength={20} />
+            </div>
+            <div>
+              <label className="label" htmlFor="bodyType">Body Type</label>
+              <select id="bodyType" name="bodyType" defaultValue={t.bodyType ?? ""} className="field">
+                <option value="">Prefer not to say</option>
+                {BODY_TYPE_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="hairColor">Hair Color</label>
+              <select id="hairColor" name="hairColor" defaultValue={t.hairColor ?? ""} className="field">
+                <option value="">Prefer not to say</option>
+                {HAIR_COLOR_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label" htmlFor="eyeColor">Eye Color</label>
+              <select id="eyeColor" name="eyeColor" defaultValue={t.eyeColor ?? ""} className="field">
+                <option value="">Prefer not to say</option>
+                {EYE_COLOR_OPTIONS.map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-3">
+            <div>
+              <label className="label" htmlFor="favoriteActivities">Favorite Things To Do</label>
+              <input id="favoriteActivities" name="favoriteActivities" defaultValue={t.favoriteActivities ?? ""} className="field" maxLength={300} />
+            </div>
+            <div>
+              <label className="label" htmlFor="enjoysAboutCuddling">What Do You Enjoy About Cuddling?</label>
+              <textarea id="enjoysAboutCuddling" name="enjoysAboutCuddling" defaultValue={t.enjoysAboutCuddling ?? ""} rows={3} className="field" maxLength={500} />
+            </div>
           </div>
         </div>
       )}

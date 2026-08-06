@@ -13,7 +13,7 @@ import { resolveLocationStrict } from "./geo";
 import { normalizeWebsiteUrl } from "./url";
 import { buildSocialLinksJson } from "./socialLinks";
 import { checkGoLive } from "./activity";
-import { WEEK_DAYS, RATE_NOT_OFFERED } from "./config";
+import { WEEK_DAYS, HOUR_BLOCKS_PER_DAY, ENJOYS_PETS_OPTIONS, ACTIVE_LIFESTYLE_OPTIONS, BODY_TYPE_OPTIONS, HAIR_COLOR_OPTIONS, EYE_COLOR_OPTIONS } from "./config";
 
 export async function applyListingUpdate(
   id: string,
@@ -37,53 +37,39 @@ export async function applyListingUpdate(
   const [city2, stateZip2] = loc2 ? loc2.label.split(",").map((s) => s.trim()) : [null, null];
   const [state2, zipMaybe2] = loc2 ? (stateZip2 || "").split(/\s+/) : [null, null];
 
-  // Services: checked cuddle-type boxes + a free-text "other" field, merged into one comma list.
-  // Agency accounts don't submit this field at all (see ListingForm.tsx) — their services column is
-  // instead auto-derived from each team member's cuddle types (see syncAgencyServices in
-  // app/actions.ts), so it must be left untouched here rather than blanked to null.
-  const checkedServices = formData.getAll("services").map((v) => String(v).trim()).filter(Boolean);
-  const otherServices = String(formData.get("servicesOther") || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const services = existing.accountType === "agency" ? existing.services : [...checkedServices, ...otherServices].join(", ") || null;
-
-  // Amenities & add-ons: same checked-boxes + free-text pattern as services.
-  const checkedAmenities = formData.getAll("amenities").map((v) => String(v).trim()).filter(Boolean);
-  const otherAmenities = String(formData.get("amenitiesOther") || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const amenities = [...checkedAmenities, ...otherAmenities].join(", ") || null;
-
-  // Payment methods + discounts: same checked-boxes + free-text pattern.
-  const checkedPayments = formData.getAll("paymentMethods").map((v) => String(v).trim()).filter(Boolean);
-  const otherPayments = String(formData.get("paymentMethodsOther") || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const paymentMethods = [...checkedPayments, ...otherPayments].join(", ") || null;
-
-  const checkedDiscounts = formData.getAll("discounts").map((v) => String(v).trim()).filter(Boolean);
-  const otherDiscounts = String(formData.get("discountsOther") || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const discounts = [...checkedDiscounts, ...otherDiscounts].join(", ") || null;
-
-  // Rates: one price per session length. Blank = "Contact me" on the public page; checking
-  // "I don't offer this" for a duration stores RATE_NOT_OFFERED instead, which hides that row
-  // from the public listing entirely (see RATE_NOT_OFFERED's comment in lib/config.ts).
+  // Hourly rate (in-person) + optional virtual session rate. Blank = "Contact Me" on the public
+  // page — see hourlyRate/offersVirtual/virtualHourlyRate's comments in lib/schema.ts.
   const parseRate = (key: string): number | null => {
-    if (formData.get(`${key}NotOffered`) === "on") return RATE_NOT_OFFERED;
     const raw = formData.get(key);
     const n = Number(raw);
     return raw && Number.isFinite(n) && n >= 0 ? Math.round(n) : null;
   };
-  const rate30 = parseRate("rate30");
-  const rate60 = parseRate("rate60");
-  const rate90 = parseRate("rate90");
-  const rate120Plus = parseRate("rate120Plus");
+  const hourlyRate = parseRate("hourlyRate");
+  const offersVirtual = formData.get("offersVirtual") === "on";
+  const virtualHourlyRate = offersVirtual ? parseRate("virtualHourlyRate") : null;
+
+  // "Getting to know you" — every field optional free text, or one of a short pick-list (only the
+  // exact listed value is accepted, same tamper-proofing pattern as gender below). See the matching
+  // columns' comments in lib/schema.ts.
+  const text = (key: string, max = 200) => String(formData.get(key) || "").trim().slice(0, max) || null;
+  const pick = (key: string, options: string[]) => {
+    const raw = String(formData.get(key) || "");
+    return options.includes(raw) ? raw : null;
+  };
+  const favoriteFood = text("favoriteFood");
+  const favoriteAnimal = text("favoriteAnimal");
+  const enjoysPets = pick("enjoysPets", ENJOYS_PETS_OPTIONS);
+  const allergies = text("allergies");
+  const favoriteMusic = text("favoriteMusic");
+  const favoriteActivities = text("favoriteActivities", 300);
+  const favoriteMovie = text("favoriteMovie");
+  const favoriteShow = text("favoriteShow");
+  const enjoysAboutCuddling = text("enjoysAboutCuddling", 500);
+  const activeLifestyle = pick("activeLifestyle", ACTIVE_LIFESTYLE_OPTIONS);
+  const height = text("height", 20);
+  const bodyType = pick("bodyType", BODY_TYPE_OPTIONS);
+  const hairColor = pick("hairColor", HAIR_COLOR_OPTIONS);
+  const eyeColor = pick("eyeColor", EYE_COLOR_OPTIONS);
 
   // Contact methods: at least one of Phone Call / Text / Email / Site Messages Only must be
   // selected. Site Messages Only is mutually exclusive with the other three — when it's on, force
@@ -140,14 +126,23 @@ export async function applyListingUpdate(
       acceptsTexts,
       acceptsEmail,
       messagesOnly,
-      services,
-      amenities,
-      paymentMethods,
-      discounts,
-      rate30,
-      rate60,
-      rate90,
-      rate120Plus,
+      hourlyRate,
+      offersVirtual,
+      virtualHourlyRate,
+      favoriteFood,
+      favoriteAnimal,
+      enjoysPets,
+      allergies,
+      favoriteMusic,
+      favoriteActivities,
+      favoriteMovie,
+      favoriteShow,
+      enjoysAboutCuddling,
+      activeLifestyle,
+      height,
+      bodyType,
+      hairColor,
+      eyeColor,
       mobile: formData.get("mobile") === "on",
       socialMediaOptIn: formData.get("socialMediaOptIn") === "on",
       websiteUrl,
@@ -182,22 +177,21 @@ export async function applyHoursUpdate(
   slug: string,
   formData: FormData
 ): Promise<{ error?: string; ok?: string }> {
-  const rows = WEEK_DAYS.map(({ day }) => {
-    const closed = formData.get(`day_${day}_closed`) === "on";
-    const open = String(formData.get(`day_${day}_open`) || "").trim();
-    const close = String(formData.get(`day_${day}_close`) || "").trim();
-    const missingTimes = !open || !close;
-    return {
-      cuddlerId: id,
-      dayOfWeek: day,
-      closed: closed || missingTimes,
-      openTime: closed || missingTimes ? null : open,
-      closeTime: closed || missingTimes ? null : close,
-    };
-  });
+  // One row per actual open block — a day with none of its HOUR_BLOCKS_PER_DAY blocks filled in
+  // simply gets no rows at all (closed), see cuddlerHours' comment in lib/schema.ts.
+  const rows: { cuddlerId: string; dayOfWeek: number; blockIndex: number; closed: false; openTime: string; closeTime: string }[] = [];
+  for (const { day } of WEEK_DAYS) {
+    for (let blockIndex = 0; blockIndex < HOUR_BLOCKS_PER_DAY; blockIndex++) {
+      const open = String(formData.get(`day_${day}_block${blockIndex}_open`) || "").trim();
+      const close = String(formData.get(`day_${day}_block${blockIndex}_close`) || "").trim();
+      if (open && close) {
+        rows.push({ cuddlerId: id, dayOfWeek: day, blockIndex, closed: false, openTime: open, closeTime: close });
+      }
+    }
+  }
 
   await db.delete(cuddlerHours).where(eq(cuddlerHours.cuddlerId, id));
-  await db.insert(cuddlerHours).values(rows);
+  if (rows.length > 0) await db.insert(cuddlerHours).values(rows);
 
   // Checkbox absent from the submitted form = unchecked, same convention as day_X_closed above.
   const gatekeepHours = formData.get("gatekeepHours") === "on";

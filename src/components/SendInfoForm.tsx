@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { DURATION_OPTIONS, INQUIRY_MESSAGE_MAX_CHARS, LOCATION_TYPE_OPTIONS, CUDDLE_TYPES, SITE_NAME } from "@/lib/config";
+import { DURATION_OPTIONS, INQUIRY_MESSAGE_MAX_CHARS, LOCATION_TYPE_OPTIONS, SITE_NAME } from "@/lib/config";
 import Turnstile from "@/components/Turnstile";
 
 /**
@@ -79,25 +79,14 @@ export default function SendInfoForm({ cuddlerId, cuddlerFirstName }: { cuddlerI
         <p className="label !mb-0">
           Appointment Details <span className="normal-case">(All Optional)</span>
         </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <label className="text-xs font-medium text-ink" htmlFor="inquiryCuddleType">Cuddle Type</label>
-            <select id="inquiryCuddleType" name="cuddleType" className="field mt-1">
-              <option value="">Not Sure Yet</option>
-              {CUDDLE_TYPES.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-ink" htmlFor="inquiryDuration">Duration</label>
-            <select id="inquiryDuration" name="duration" className="field mt-1">
-              <option value="">Not Sure Yet</option>
-              {DURATION_OPTIONS.map((d) => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-          </div>
+        <div>
+          <label className="text-xs font-medium text-ink" htmlFor="inquiryDuration">Duration</label>
+          <select id="inquiryDuration" name="duration" className="field mt-1">
+            <option value="">Not Sure Yet</option>
+            {DURATION_OPTIONS.map((d) => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-4">
           {LOCATION_TYPE_OPTIONS.map((opt) => (

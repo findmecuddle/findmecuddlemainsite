@@ -118,7 +118,7 @@ export default function SetupWizard({
       id: "hours",
       title: "Set Your Hours",
       description: "Clients can only call, text, or message you during the hours you set here.",
-      isComplete: hours.some((h) => h.row !== null),
+      isComplete: hours.some((h) => h.blocks.length > 0),
       render: () => <HoursForm hours={hours} gatekeepHours={t.gatekeepHours} />,
     },
     // Plan/payment is deliberately asked for here — after the ad, team, and hours are already

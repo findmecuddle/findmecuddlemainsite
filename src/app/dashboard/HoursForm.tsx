@@ -2,8 +2,13 @@
 
 import { useFormState } from "react-dom";
 import { updateHours } from "@/app/actions";
+import { HOUR_BLOCKS_PER_DAY } from "@/lib/config";
 
-type DayRow = { day: number; label: string; row: { closed: boolean; openTime: string | null; closeTime: string | null } | null };
+type DayRow = {
+  day: number;
+  label: string;
+  blocks: { blockIndex: number; openTime: string | null; closeTime: string | null }[];
+};
 type FormAction = (
   state: { error?: string; ok?: string } | null,
   formData: FormData
@@ -28,36 +33,42 @@ export default function HoursForm({
   return (
     <form action={action} className="card grid gap-4 p-6">
       <h2 className="font-display text-lg font-semibold">Hours</h2>
-      <p className="text-sm text-stone2">Set the days and times you're available. Clients see this on your public ad.</p>
+      <p className="text-sm text-stone2">
+        Set the days and times you're available. Leave every block on a day blank to mark it closed.
+        You can add up to {HOUR_BLOCKS_PER_DAY} separate time blocks per day (e.g. 9-10am, then
+        11am-1pm) if you have a gap in your schedule.
+      </p>
 
-      <div className="grid gap-2">
-        {hours.map(({ day, label, row }) => {
-          const closedDefault = row?.closed ?? true;
-          return (
-            <div key={day} className="grid grid-cols-[110px,auto,1fr,auto,1fr] items-center gap-2 border-t border-line pt-2 first:border-t-0 first:pt-0">
-              <span className="text-sm font-medium">{label}</span>
-              <label className="flex items-center gap-1.5 text-xs text-stone2">
-                <input type="checkbox" name={`day_${day}_closed`} defaultChecked={closedDefault} className="h-4 w-4 accent-spruce" />
-                Closed
-              </label>
-              <input
-                type="time"
-                name={`day_${day}_open`}
-                defaultValue={row?.openTime ?? ""}
-                className="field"
-                aria-label={`${label} opens`}
-              />
-              <span className="text-center text-xs text-stone2">to</span>
-              <input
-                type="time"
-                name={`day_${day}_close`}
-                defaultValue={row?.closeTime ?? ""}
-                className="field"
-                aria-label={`${label} closes`}
-              />
+      <div className="grid gap-4">
+        {hours.map(({ day, label, blocks }) => (
+          <div key={day} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
+            <span className="text-sm font-medium">{label}</span>
+            <div className="mt-1.5 grid gap-1.5">
+              {Array.from({ length: HOUR_BLOCKS_PER_DAY }, (_, i) => {
+                const block = blocks.find((b) => b.blockIndex === i);
+                return (
+                  <div key={i} className="grid grid-cols-[1fr,auto,1fr] items-center gap-2">
+                    <input
+                      type="time"
+                      name={`day_${day}_block${i}_open`}
+                      defaultValue={block?.openTime ?? ""}
+                      className="field"
+                      aria-label={`${label} block ${i + 1} opens`}
+                    />
+                    <span className="text-center text-xs text-stone2">to</span>
+                    <input
+                      type="time"
+                      name={`day_${day}_block${i}_close`}
+                      defaultValue={block?.closeTime ?? ""}
+                      className="field"
+                      aria-label={`${label} block ${i + 1} closes`}
+                    />
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
       <label className="flex items-start gap-2 rounded-lg bg-porcelain p-3 text-sm">

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useFormState } from "react-dom";
 import { completeOnboarding } from "@/app/actions";
@@ -8,66 +7,24 @@ import { SITE_NAME } from "@/lib/config";
 
 export default function OnboardingForm() {
   const [state, action] = useFormState(completeOnboarding, null as null | { error?: string });
-  const [accountType, setAccountType] = useState<"solo" | "agency">("solo");
+  // Agency/team accounts are hidden from signup as of the v1 launch decision — every new signup is
+  // a solo cuddler. The accountType field still exists server-side (see actions.ts) and defaults to
+  // "solo" when omitted, so this form simply never sends it. The underlying agency code (schema,
+  // TeamManager, agency Stripe plans) is untouched in case this is turned back on later.
 
   return (
     <form action={action} className="mt-7 grid gap-5">
-      <div>
-        <label className="label">I'm Signing Up As</label>
-        <div className="mt-1.5 grid gap-2.5 sm:grid-cols-2">
-          <label
-            className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-4 text-sm transition-colors ${
-              accountType === "solo" ? "border-spruce bg-spruce-tint" : "border-line hover:border-spruce/40"
-            }`}
-          >
-            <input
-              type="radio"
-              name="accountType"
-              value="solo"
-              checked={accountType === "solo"}
-              onChange={() => setAccountType("solo")}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-spruce"
-            />
-            <span>
-              <span className="font-medium text-ink">An Individual Cuddler</span>
-              <span className="mt-1 block text-xs leading-relaxed text-stone2">
-                One listing, your own rates and services.
-              </span>
-            </span>
-          </label>
-          <label
-            className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-4 text-sm transition-colors ${
-              accountType === "agency" ? "border-spruce bg-spruce-tint" : "border-line hover:border-spruce/40"
-            }`}
-          >
-            <input
-              type="radio"
-              name="accountType"
-              value="agency"
-              checked={accountType === "agency"}
-              onChange={() => setAccountType("agency")}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-spruce"
-            />
-            <span>
-              <span className="font-medium text-ink">A Agency Or Business</span>
-              <span className="mt-1 block text-xs leading-relaxed text-stone2">
-                One listing with a team of cuddlers, each with their own photo, hours, and cuddle types.
-              </span>
-            </span>
-          </label>
-        </div>
-      </div>
       <div className="grid gap-4">
         <div>
           <label className="label" htmlFor="name">
-            {accountType === "agency" ? "Your Agency Or Business Name" : "Name Shown On Your Ad"}
+            Name Shown On Your Ad
           </label>
           <input
             id="name"
             name="name"
             required
             className="field"
-            placeholder={accountType === "agency" ? "Serenity Agency & Wellness" : "Jordan Reyes, LMT"}
+            placeholder="Jordan Reyes, LMT"
           />
         </div>
         <div>
