@@ -6,9 +6,9 @@ import { SITE_NAME } from "@/lib/config";
 import { currentCuddler } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: { default: `${SITE_NAME} · Find A Cuddle Professional Or Agency Near You`, template: `%s · ${SITE_NAME}` },
+  title: { default: `${SITE_NAME} · Find A Cuddler Near You`, template: `%s · ${SITE_NAME}` },
   description:
-    "Find Me Cuddle: search independent cuddle professionals and agencies near you by zip code, city, or address. Studio, mobile, and on-the-go sessions.",
+    "Find Me Cuddle: search independent cuddlers near you by zip code or city. In-person and virtual sessions.",
   manifest: "/site.webmanifest",
   verification: {
     google: "vD6qNaffOnVOBUJ_tx6sFZEKU3GH6t9FxOmmuQT_d0E",

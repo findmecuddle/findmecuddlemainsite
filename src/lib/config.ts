@@ -130,10 +130,10 @@ export const WEEK_DAYS: { day: number; label: string }[] = [
   { day: 6, label: "Saturday" },
   { day: 0, label: "Sunday" },
 ];
-// Up to this many separate open time blocks per day (e.g. 9-10am, then 11am-1pm) — see
-// cuddlerHours in lib/schema.ts and HoursForm.tsx. A fixed cap keeps the hours form static (no
-// client-side add/remove-row JS needed) while still covering realistic gap-in-the-day schedules.
-export const HOUR_BLOCKS_PER_DAY = 3;
+// One open time block per day (a single open/close pair) — see cuddlerHours in lib/schema.ts and
+// HoursForm.tsx. The underlying table still supports multiple blocks a day via blockIndex, kept in
+// case this changes later, but the form only ever collects one per day right now.
+export const HOUR_BLOCKS_PER_DAY = 1;
 
 // --- Rates ---
 // A single flat hourly rate for in-person sessions, plus an optional separate rate for virtual

@@ -10,7 +10,7 @@ export const metadata = {
 export default function HowItWorksPage() {
   return (
     <div className="container-page max-w-3xl py-14">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-spruce">For Cuddlers &amp; Agencies</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-spruce">For Cuddlers</p>
       <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">
         How Messaging &amp; Client Screening Work
       </h1>

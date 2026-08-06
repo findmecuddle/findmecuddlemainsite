@@ -79,22 +79,6 @@ export default async function HomePage() {
     <>
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <section className="border-b border-line bg-spruce-tint">
-        <div className="container-page py-6 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-spruce">
-            For Cuddlers &amp; Agencies
-          </p>
-          <h2 className="mx-auto mt-2 max-w-2xl font-display text-xl font-semibold leading-snug sm:text-2xl">
-            A Warmer Way To List Your Cuddle Practice
-          </h2>
-          <p className="mx-auto mt-2 max-w-2xl text-sm text-stone2">
-            We built {SITE_NAME} because cuddlers deserve a home that actually feels like it's on their
-            side: no surprise bans, no playing favorites, just a simple listing that puts a real, human
-            connection front and center.
-          </p>
-        </div>
-      </section>
-
       <section
         className="border-b border-line bg-cover bg-center"
         style={{

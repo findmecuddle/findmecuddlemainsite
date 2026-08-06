@@ -115,7 +115,10 @@ export default function TermsPage() {
             Clients choose, contact, and schedule directly with cuddlers at their own discretion. Any
             arrangement, payment, or dispute regarding a session is strictly between the client and the
             cuddler. {SITE_NAME} is not responsible for the quality, safety, legality, or outcome of any
-            session booked through the site.
+            session booked through the site, or for anything a client does, says, or requests once they've
+            contacted a cuddler through the site. We're simply an advertising platform that helps cuddlers
+            promote their services and gives clients a way to find them; we don't participate in, oversee, or
+            take responsibility for what happens after that initial contact is made.
           </p>
         </section>
 
@@ -140,13 +143,38 @@ export default function TermsPage() {
 
         <section>
           <h2 className="font-display text-xl font-semibold">Your safety</h2>
+          <p className="mt-3 rounded-lg bg-red-50 p-3 font-medium text-red-800">
+            If you are ever in a dangerous situation, or something illegal is happening or being threatened,
+            call 911 or your local emergency services immediately. Don't wait to report it to us first.
+          </p>
           <p className="mt-3">
             {SITE_NAME} does not take responsibility for any cuddler who practices illegally, misrepresents their
-            certification, or offers anything beyond the services described on their listing. If you are ever in a
-            dangerous situation, contact 911 or emergency medical services immediately, don't wait to report it to
-            us first. Once you're safe, please submit a report through the cuddler's listing or contact us
-            directly so we can review it. We will report any illegal activity we become aware of to law
-            enforcement.
+            certification, or offers anything beyond the services described on their listing. Once you're safe,
+            you're welcome to report anything concerning through the "Report" option on a cuddler's listing or by
+            contacting us directly, and we will report any illegal activity we become aware of to law enforcement.
+          </p>
+          <p className="mt-3">
+            We screen cuddlers to the best of our ability through identity verification (see "Identity
+            verification" above) and by acting on reports submitted to us, but this screening has real limits.
+            Verification is a point-in-time check, not an ongoing background check or criminal history search,
+            and it's entirely possible that someone has behaved badly with another client without that ever
+            being reported to us or reflected anywhere on the site. A cuddler having no reports, or holding a
+            "Verified" badge, is not a guarantee of their safety, character, or future conduct. Use your own
+            judgment before and during any session, the same way you would with anyone you're meeting for the
+            first time.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-display text-xl font-semibold">Assumption of risk</h2>
+          <p className="mt-3">
+            Arranging to meet someone in person, whether at your location, theirs, or elsewhere, carries
+            inherent personal risk that {SITE_NAME} cannot eliminate or guarantee against. By using the site to
+            find, contact, or arrange a session with a cuddler (or to find or accept a client, if you're a
+            cuddler), you voluntarily assume all risks associated with that interaction, including risks to your
+            physical safety, property, and finances. {SITE_NAME} is not responsible for the acts or omissions of
+            any user, cuddler, or client, whether or not we were aware of prior complaints or reports about
+            them.
           </p>
         </section>
 
@@ -224,6 +252,17 @@ export default function TermsPage() {
             arranged through the site, including damages related to a cuddler's conduct, licensing status, or
             service quality. Our total liability for any claim relating to the site is limited to the amount you
             paid us, if any, in the 12 months before the claim arose.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-display text-xl font-semibold">Indemnification</h2>
+          <p className="mt-3">
+            You agree to defend, indemnify, and hold harmless {SITE_NAME}, {LEGAL_ENTITY}, and our owners,
+            employees, and contractors from any claim, damage, loss, liability, or expense (including reasonable
+            attorneys' fees) arising out of or related to: your use of the site; any session, meeting, or
+            interaction you have with another user, whether arranged through the site or not; your violation of
+            these Terms; or your violation of any law or the rights of a third party.
           </p>
         </section>
 

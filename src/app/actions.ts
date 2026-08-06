@@ -464,6 +464,11 @@ export async function requestPhotoshoot() {
 // ---------- Ledger (dashboard helper) ----------
 
 export async function recentLedger(cuddlerId: string) {
+  // Same "this file is a public server action surface" reasoning as listInquiries above — billing
+  // history shouldn't be readable by anyone who can call this with someone else's id.
+  const me = await currentCuddler();
+  if (!me || me.id !== cuddlerId) return [];
+
   return db
     .select()
     .from(creditEvents)
@@ -479,6 +484,13 @@ export async function recentLedger(cuddlerId: string) {
 // or individually searchable listing — see the schema.ts comment on agencyEmployees.
 
 export async function listEmployees(cuddlerId: string) {
+  // Employee roster data is shown publicly on the agency's own profile page anyway, so this isn't
+  // sensitive, but every export in a "use server" file is independently callable as a server
+  // action regardless of which page renders a button for it — same reasoning as listInquiries and
+  // recentLedger above, kept here too for consistency rather than as an exception to the pattern.
+  const me = await currentCuddler();
+  if (!me || me.id !== cuddlerId) return [];
+
   return db
     .select()
     .from(agencyEmployees)
@@ -668,6 +680,14 @@ export async function deleteInquiries(formData: FormData) {
 }
 
 export async function listInquiries(cuddlerId: string) {
+  // Auth check even though every current caller already passes the signed-in cuddler's own id
+  // (see dashboard/page.tsx) — this file is "use server", so every exported function here is
+  // independently callable as a server action with arbitrary arguments, not just from the pages
+  // that happen to render a button for it. Without this, anyone could call listInquiries() with
+  // another cuddler's id and read their clients' names, phone numbers, and emails directly.
+  const me = await currentCuddler();
+  if (!me || me.id !== cuddlerId) return [];
+
   const rows = await db
     .select()
     .from(inquiries)
