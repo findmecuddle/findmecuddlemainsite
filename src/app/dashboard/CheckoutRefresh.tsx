@@ -39,14 +39,14 @@ export default function CheckoutRefresh() {
   if (checkout === "plan_failed") {
     return (
       <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
-        We couldn't switch your plan — the charge for the prorated difference didn't go through. Check your
+        We couldn't switch your plan: the charge for the prorated difference didn't go through. Check your
         payment method under Manage Subscription and try again.
       </p>
     );
   }
   if (checkout === "canceled") {
     return (
-      <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Checkout was canceled — no changes were made.</p>
+      <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Checkout was canceled. No changes were made.</p>
     );
   }
 

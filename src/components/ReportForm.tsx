@@ -19,7 +19,7 @@ export default function ReportForm({ cuddlerId }: { cuddlerId: string }) {
   }
 
   if (result?.ok) {
-    return <p className="mt-3 text-sm text-spruce">Thanks — we'll review this report.</p>;
+    return <p className="mt-3 text-sm text-spruce">Thanks! We'll review this report.</p>;
   }
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
@@ -49,7 +49,7 @@ export default function ReportForm({ cuddlerId }: { cuddlerId: string }) {
   return (
     <form onSubmit={submit} className="mt-3 grid gap-3 rounded-xl border border-line bg-porcelain p-4">
       <p className="text-xs text-stone2">
-        Report inaccurate, inappropriate, or fraudulent content on this listing. Include what you can — reports are
+        Report inaccurate, inappropriate, or fraudulent content on this listing. Include what you can; reports are
         reviewed manually.
       </p>
       <div>

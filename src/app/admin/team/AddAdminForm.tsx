@@ -18,7 +18,7 @@ export default function AddAdminForm() {
       <button className="btn-primary w-fit">Add</button>
       <p className="text-xs text-stone2">
         They can log in at <code>/admin/login</code> right away with this email and password. Share it with
-        them directly — there's no invite email sent.
+        them directly, since there's no invite email sent.
       </p>
     </form>
   );

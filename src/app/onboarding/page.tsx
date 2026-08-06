@@ -19,7 +19,7 @@ export default async function OnboardingPage() {
       <div className="card w-full max-w-md p-8">
         <h1 className="font-display text-2xl font-semibold">Finish setting up your listing</h1>
         <p className="mt-1 text-sm text-stone2">
-          Your account's created — just a couple more details before your dashboard is ready.
+          Your account's created, just a couple more details before your dashboard is ready.
         </p>
         <OnboardingForm />
       </div>

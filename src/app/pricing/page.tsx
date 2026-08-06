@@ -7,22 +7,22 @@ import { stripe } from "@/lib/stripe";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Advertise Your Cuddle Practice",
-  description: "List your independent cuddle therapy practice on Find Me Cuddle. Standard or VIP plans, no commission on bookings.",
+  title: "List Yourself As A Cuddler",
+  description: "Create your cuddler listing on Find Me Cuddle. Standard or VIP plans, no commission on bookings.",
 };
 
 const WHY_ADVERTISE = [
-  { icon: MapPin, title: "Local Search Visibility", body: "Clients searching your area by zip code, city, or address find your ad directly." },
-  { icon: Handshake, title: "No Middleman", body: "Clients contact you directly by call, text, or email. No commission on your bookings." },
-  { icon: ShieldCheck, title: "Verified Trust Badge", body: "Every listing is reviewed and license-verified, so clients know you're the real deal." },
-  { icon: DollarSign, title: "Affordable Flat Rate", body: "One simple listing price, no per-booking fees or hidden charges." },
-  { icon: Zap, title: "Boosts And VIP Perks", body: "Push your ad to the top of local search whenever you want extra visibility." },
-  { icon: Calendar, title: "Flexible Plans", body: "Run your ad weekly or monthly, and cancel anytime." },
-  { icon: MessageCircle, title: "Real, Responsive Support", body: "We answer customer service messages as fast as we can. A real person, not a bot." },
-  { icon: Megaphone, title: "We Promote You", body: "We repost your listing on our socials, and we invest in paid marketing, not just free posts." },
-  { icon: Rocket, title: "Growing The Community", body: "We're focused on growing this community as big as possible, more clients, more visibility for you." },
-  { icon: Wrench, title: "Always Improving", body: "We're constantly developing and adding new tools and features to the platform as time goes on." },
-  { icon: Scale, title: "Fair Moderation", body: "We only ban cuddlers who break our rules or the law. We don't ban for no reason." },
+  { icon: MapPin, title: "Show Up Locally", body: "Clients searching your area by zip code or city find your profile directly." },
+  { icon: Handshake, title: "No Middleman", body: "Clients reach out to you directly by call, text, or email. No commission on your bookings." },
+  { icon: ShieldCheck, title: "Verified Badge", body: "Every listing is reviewed and ID-verified, so clients know you're the real deal." },
+  { icon: DollarSign, title: "One Simple Price", body: "A single flat listing rate, no per-booking fees or hidden charges." },
+  { icon: Zap, title: "Boosts And VIP Perks", body: "Push your profile to the top of local search whenever you want extra visibility." },
+  { icon: Calendar, title: "Flexible Plans", body: "Keep your listing up weekly or monthly, and cancel anytime." },
+  { icon: MessageCircle, title: "Real, Responsive Support", body: "We answer support messages as fast as we can. A real person, not a bot." },
+  { icon: Megaphone, title: "We Help Spread The Word", body: "We repost your listing on our socials and invest in real marketing, not just free posts." },
+  { icon: Rocket, title: "A Growing Community", body: "We're focused on growing this space, so more clients discover more cuddlers over time." },
+  { icon: Wrench, title: "Always Improving", body: "We're constantly adding new tools and features as time goes on." },
+  { icon: Scale, title: "Fair, No-Drama Moderation", body: "We only remove cuddlers who break our rules or the law. We don't ban for no reason." },
   {
     icon: BellOff,
     title: "Off-Hours Gatekeeping",
@@ -77,14 +77,14 @@ export default async function PricingPage() {
   return (
     <div className="container-page py-14">
       <div className="max-w-2xl">
-        <h1 className="font-display text-4xl font-semibold tracking-tight">Advertise on {SITE_NAME}</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight">List Yourself On {SITE_NAME}</h1>
         <p className="mt-3 text-stone2">
           One listing, found by clients searching your area. Pick how long it runs. Cancel anytime.
         </p>
       </div>
 
       <div className="mt-12">
-        <h2 className="font-display text-2xl font-semibold">Why You Should Advertise With Us</h2>
+        <h2 className="font-display text-2xl font-semibold">Why List With Us</h2>
         <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {WHY_ADVERTISE.map(({ icon: Icon, title, body }) => (
             <div key={title}>

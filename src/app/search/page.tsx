@@ -70,7 +70,7 @@ export default async function SearchPage(
         <div className="card mt-10 max-w-xl p-6">
           <h2 className="font-display text-lg font-semibold">We couldn’t place “{q}”</h2>
           <p className="mt-2 text-sm text-stone2">
-            Try a 5-digit zip code or a city with its state — for example <strong>78704</strong> or{" "}
+            Try a 5-digit zip code or a city with its state, for example <strong>78704</strong> or{" "}
             <strong>Austin, TX</strong>.
           </p>
         </div>

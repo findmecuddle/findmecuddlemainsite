@@ -60,7 +60,7 @@ export default function TermsPage() {
             Before a listing can go live, we require a cuddler to submit a photo of any cuddle therapy
             certification they hold (or confirm they don't hold one, since most states don't require one) and
             pass a government-issued photo ID and live-selfie check, which we review before approving the
-            listing. This review confirms that the submitted documents were reviewed and appear to match — it
+            listing. This review confirms that the submitted documents were reviewed and appear to match. It
             is not a guarantee of a cuddler's ongoing conduct, and clients should use their own judgment the
             same way they would with any independent contractor. Submitting false, expired, or altered
             documents is grounds for immediate account termination.
@@ -71,7 +71,7 @@ export default function TermsPage() {
           <h2 className="font-display text-xl font-semibold">Accounts</h2>
           <p className="mt-3">
             You're responsible for keeping your account password confidential and for all activity under your
-            account. Listing information must be accurate — misrepresenting your identity, location, services,
+            account. Listing information must be accurate: misrepresenting your identity, location, services,
             or credentials is a violation of these Terms.
           </p>
           <p className="mt-3">
@@ -94,7 +94,7 @@ export default function TermsPage() {
           </p>
           <p className="mt-3">
             As a general policy, payments are non-refundable. If you'd like to cancel and believe a refund is
-            warranted, contact us directly at the email below — we review these requests case by case and may,
+            warranted, contact us directly at the email below. We review these requests case by case and may,
             at our discretion, issue a prorated refund.
           </p>
         </section>
@@ -124,7 +124,7 @@ export default function TermsPage() {
           <p className="mt-3">
             A cuddler may add a link to their own personal or business website on their listing. We review
             each link before it's shown publicly, but that review only confirms the link appeared to lead
-            somewhere reasonable at the time we checked it — it is not an endorsement, guarantee, or ongoing
+            somewhere reasonable at the time we checked it. It is not an endorsement, guarantee, or ongoing
             verification of that site, its content, its security, or anything offered through it, and a site's
             content or ownership can change at any time after our review. You follow any such link entirely at
             your own risk. {SITE_NAME} is not responsible for any loss, scam, malware, or other harm arising from
@@ -169,8 +169,8 @@ export default function TermsPage() {
             emergency services immediately. Don't wait to report it to us first.
           </p>
           <p className="mt-3">
-            {SITE_NAME} lets a cuddler flag a client's phone number or email after a bad experience — a
-            no-show, non-payment, scam, chargeback, aggressive or threatening behavior, or similar — so other
+            {SITE_NAME} lets a cuddler flag a client's phone number or email after a bad experience (a
+            no-show, non-payment, scam, chargeback, aggressive or threatening behavior, or similar), so other
             cuddlers see a warning if that same contact reaches out to them. We do not verify these reports,
             investigate the underlying incident, or independently confirm their accuracy before they're shown to
             other cuddlers. We only collect and display what's submitted.
@@ -196,9 +196,9 @@ export default function TermsPage() {
         <section>
           <h2 className="font-display text-xl font-semibold">Strikes and account suspension</h2>
           <p className="mt-3">
-            We use a three-strike policy for violations of these Terms. Each confirmed violation — including but
+            We use a three-strike policy for violations of these Terms. Each confirmed violation (including but
             not limited to a false or misleading listing, a substantiated report from a client, or a complaint
-            referred by law enforcement — counts as one strike. After a third strike, we will investigate the
+            referred by law enforcement) counts as one strike. After a third strike, we will investigate the
             account in full. If that investigation finds you have violated the law or these Terms, we will
             suspend or terminate the account. Suspensions and terminations under this policy are not eligible for
             a refund. We may also skip this process and suspend or terminate an account immediately for serious

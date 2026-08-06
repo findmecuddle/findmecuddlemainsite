@@ -30,7 +30,7 @@ export default function SendInfoForm({ cuddlerId, cuddlerFirstName }: { cuddlerI
   if (result?.ok) {
     return (
       <p className="mt-3 rounded-lg bg-porcelain p-3 text-sm text-spruce">
-        Sent — {cuddlerFirstName} has your info and will reach out directly.
+        Sent! {cuddlerFirstName} has your info and will reach out directly.
       </p>
     );
   }
@@ -73,7 +73,7 @@ export default function SendInfoForm({ cuddlerId, cuddlerFirstName }: { cuddlerI
           <input id="inquiryEmail" name="email" type="email" className="field" placeholder="you@example.com" />
         </div>
       </div>
-      <p className="-mt-1 text-xs text-stone2">Enter at least one — phone or email.</p>
+      <p className="-mt-1 text-xs text-stone2">Enter at least one: phone or email.</p>
 
       <div className="grid gap-3 border-t border-line pt-3">
         <p className="label !mb-0">

@@ -39,9 +39,9 @@ export default async function AdminEditCuddlerPage(props: { params: Promise<{ id
   const notLiveReason = live
     ? null
     : suspended
-    ? "Suspended — lift the suspension below to allow it to go live again."
+    ? "Suspended. Lift the suspension below to allow it to go live again."
     : !t.published
-    ? 'Not published — the "Publish My Ad" checkbox in the form below is off.'
+    ? 'Not published. The "Publish My Ad" checkbox in the form below is off.'
     : t.subStatus !== "active"
     ? `No active subscription (subscription status: "${t.subStatus}").`
     : t.activeUntil && t.activeUntil.getTime() < Date.now()
@@ -49,10 +49,10 @@ export default async function AdminEditCuddlerPage(props: { params: Promise<{ id
     : t.verificationStatus !== "approved"
     ? `Certification review isn't approved yet (status: "${t.verificationStatus}").`
     : t.identityStatus !== "verified"
-    ? `Identity check isn't verified yet (status: "${t.identityStatus}") — see the Stripe Identity card below.`
+    ? `Identity check isn't verified yet (status: "${t.identityStatus}"). See the Stripe Identity card below.`
     : paused
-    ? "Vacation-paused — resume it (from their own dashboard, or wait for it to auto-expire)."
-    : "Not live for an unclear reason — double-check every field below.";
+    ? "Vacation-paused. Resume it (from their own dashboard, or wait for it to auto-expire)."
+    : "Not live for an unclear reason. Double-check every field below.";
 
   return (
     <div className="container-page py-10">

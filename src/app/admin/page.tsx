@@ -109,7 +109,7 @@ export default async function AdminPage() {
                   {v.licenseNotRequired ? (
                     <p className="max-w-sm rounded-lg bg-gold/10 p-3 text-xs text-ink/90">
                       Cuddler states <span className="font-medium">{v.state}</span> does not require
-                      certification for cuddle therapy. Check this before approving — no photo was submitted.
+                      certification for cuddle therapy. Check this before approving: no photo was submitted.
                     </p>
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -151,7 +151,7 @@ export default async function AdminPage() {
         </h2>
         <p className="mt-1 text-xs text-stone2">
           Photos you've flagged yourself while reviewing a listing (see the photo grid on each account's Edit
-          page). The photo is already live on the site either way — flagging it here just puts it in this queue
+          page). The photo is already live on the site either way; flagging it here just puts it in this queue
           for a follow-up decision. Dismiss if it's fine after all, Remove Photo if it's not, or Crop to trim it
           instead of removing it entirely.
         </p>
@@ -208,7 +208,7 @@ export default async function AdminPage() {
           {websiteQueue.length > 0 && <span className="text-stone2">({websiteQueue.length})</span>}
         </h2>
         <p className="mt-1 text-xs text-stone2">
-          Click through before approving — check it's actually the cuddler's own site and not a scam,
+          Click through before approving: check it's actually the cuddler's own site and not a scam,
           malware, or something unrelated. We're not responsible for a link once it's live, but we don't want to
           have shown it in the first place.
         </p>
@@ -262,7 +262,7 @@ export default async function AdminPage() {
           {socialQueue.length > 0 && <span className="text-stone2">({socialQueue.length})</span>}
         </h2>
         <p className="mt-1 text-xs text-stone2">
-          Newly-live listings that opted into social marketing. Nothing posts automatically — copy the caption,
+          Newly-live listings that opted into social marketing. Nothing posts automatically: copy the caption,
           save the photo, and post it yourself to X, Facebook, or anywhere else, then mark it done.
         </p>
         {socialQueue.length === 0 ? (
@@ -438,7 +438,7 @@ export default async function AdminPage() {
         <h2 className="font-display text-xl font-semibold">Customer Contact Reports</h2>
         <p className="mt-1 text-xs text-stone2">
           Look up a client's phone number or email to see every report a cuddler has filed against it
-          site-wide, including who filed it — a regular cuddler only ever sees the aggregate count.
+          site-wide, including who filed it. A regular cuddler only ever sees the aggregate count.
         </p>
         <FlaggedContactSearch />
       </section>
@@ -448,7 +448,7 @@ export default async function AdminPage() {
           All Reviews {allReviewsList.length > 0 && <span className="text-stone2">({allReviewsList.length})</span>}
         </h2>
         <p className="mt-1 text-xs text-stone2">
-          Every review ever submitted, any status — not just the pending queue above. A review that already
+          Every review ever submitted, any status, not just the pending queue above. A review that already
           went live can still need to come down later.
         </p>
         {allReviewsList.length === 0 ? (

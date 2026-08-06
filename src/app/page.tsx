@@ -12,10 +12,10 @@ import NewsletterForm from "@/components/NewsletterForm";
 export const dynamic = "force-dynamic";
 
 const HOW_IT_WORKS = [
-  { icon: MapPin, title: "Search Nearby", body: "Enter a zip code, city, or address to see cuddlers near you." },
-  { icon: Calendar, title: "Check Hours", body: "Every profile lists weekly availability, so you know when they're open." },
-  { icon: Info, title: "View Details", body: "Rates, services, and a verified-license badge, all in one place." },
-  { icon: Headphones, title: "Contact Directly", body: "Reach out and book straight with the cuddler. No middleman." },
+  { icon: MapPin, title: "Search Nearby", body: "Enter a zip code or city to see cuddlers near you." },
+  { icon: Calendar, title: "Check Availability", body: "Every profile lists weekly hours, so you know when they're free." },
+  { icon: Info, title: "Get To Know Them", body: "Rates, a bit about who they are, and a verified badge, all in one place." },
+  { icon: Headphones, title: "Reach Out Directly", body: "Message or contact the cuddler yourself and set up a time. No middleman." },
 ];
 
 const HOMEPAGE_SECTION_LIMIT = 8;
@@ -82,20 +82,16 @@ export default async function HomePage() {
       <section className="border-b border-line bg-spruce-tint">
         <div className="container-page py-6 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-spruce">
-            For Independent Cuddlers &amp; Agencies
+            For Cuddlers &amp; Agencies
           </p>
           <h2 className="mx-auto mt-2 max-w-2xl font-display text-xl font-semibold leading-snug sm:text-2xl">
-            The Next Best Cuddle Therapy Advertising Site
+            A Warmer Way To List Your Cuddle Practice
           </h2>
           <p className="mx-auto mt-2 max-w-2xl text-sm text-stone2">
-            Tired of platforms that take your money, ban you without a real reason, or play favorites
-            because they can? We built {SITE_NAME} to actually support independent cuddlers and agencies.
-            Like any real advertising site should, we put part of what you pay us back into marketing
-            and improving the platform, so your listing keeps reaching more clients over time.
+            We built {SITE_NAME} because cuddlers deserve a home that actually feels like it's on their
+            side: no surprise bans, no playing favorites, just a simple listing that puts a real, human
+            connection front and center.
           </p>
-          <Link href="/pricing" className="btn-primary mt-4 inline-block">
-            Advertise With Us
-          </Link>
         </div>
       </section>
 
@@ -109,13 +105,13 @@ export default async function HomePage() {
         <div className="container-page py-16 sm:py-24">
           <div className="max-w-2xl">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-spruce">
-              Certified · Independent · Local
+              Verified · Independent · Local
             </p>
             <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">
-              Find A Cuddle Professional Or Agency <em className="font-normal italic text-spruce">Near You</em>
+              Find A Cuddler <em className="font-normal italic text-spruce">Near You</em>
             </h1>
             <p className="mt-4 max-w-xl text-base text-stone2 sm:text-lg">
-              Search Independent Cuddlers And Agencies By Zip Code, City, Or Address.
+              A little comfort, connection, and calm, right in your area.
             </p>
           </div>
           <div className="mt-8 max-w-2xl">
@@ -198,7 +194,8 @@ export default async function HomePage() {
         <div className="container-page py-14">
           <h3 className="font-display text-lg font-semibold">Are You A Cuddler?</h3>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-stone2">
-            Advertise on {SITE_NAME} with a Standard or VIP listing.
+            List yourself on {SITE_NAME} with a Standard or VIP profile, and start connecting with
+            clients near you.
           </p>
           <Link href="/pricing" className="mt-3 inline-block text-sm font-medium text-spruce hover:underline">
             See listing plans →

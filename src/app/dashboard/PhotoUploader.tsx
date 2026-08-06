@@ -145,7 +145,7 @@ export default function PhotoUploader({
 
   return (
     <div>
-      <label className="label">Photos (up to {maxPhotos} — HD required, 1280×720 minimum)</label>
+      <label className="label">Photos (up to {maxPhotos}; HD required, 1280×720 minimum)</label>
       <div className="mt-2 grid grid-cols-3 gap-3">
         {slots.map((slot) => {
           const url = photos[slot];

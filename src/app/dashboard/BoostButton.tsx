@@ -53,7 +53,7 @@ export default function BoostButton({
               className="field text-sm"
             />
             <p className="mt-1 text-[11px] text-stone2">
-              {message.length}/{BOOST_MESSAGE_MAX_CHARS} — shown with your Featured badge while the boost is active.
+              {message.length}/{BOOST_MESSAGE_MAX_CHARS}: shown with your Featured badge while the boost is active.
             </p>
           </div>
         )}
@@ -61,17 +61,17 @@ export default function BoostButton({
           {boostActive ? "Boost Active" : "Boost Now"}
         </button>
       </form>
-      {!live && <p className="mt-2 text-xs text-stone2">Go live first — boosts only work on active listings.</p>}
+      {!live && <p className="mt-2 text-xs text-stone2">Go live first. Boosts only work on active listings.</p>}
       {live && boostActive && expiresAt && (
         <div className="mt-2">
           <p className="text-xs font-medium text-gold">
-            Boost active — <CountdownClock until={new Date(expiresAt).toISOString()} />
+            Boost active: <CountdownClock until={new Date(expiresAt).toISOString()} />
           </p>
           {boostMessage && <p className="mt-1 text-xs italic text-stone2">Showing: "{boostMessage}"</p>}
         </div>
       )}
       {live && !boostActive && credits === 0 && (
-        <p className="mt-2 text-xs text-stone2">No credits left — buy a pack below.</p>
+        <p className="mt-2 text-xs text-stone2">No credits left. Buy a pack below.</p>
       )}
       {state?.error && <p className="mt-2 text-xs text-red-700">{state.error}</p>}
       {state?.ok && <p className="mt-2 text-xs text-spruce">{state.ok}</p>}

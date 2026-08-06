@@ -18,7 +18,7 @@ export default function PrivacyPage() {
           {LEGAL_ENTITY} ("{SITE_NAME}," "we," "us," or "our") operates a directory that helps clients find
           independent cuddle professionals and lets cuddlers list and manage their own advertisements. This
           policy explains what personal information we collect, how we use it, and the choices you have. It
-          applies to everyone who uses {SITE_NAME} — clients browsing listings and cuddlers who create them.
+          applies to everyone who uses {SITE_NAME}: clients browsing listings and cuddlers who create them.
         </p>
 
         <section>
@@ -45,23 +45,24 @@ export default function PrivacyPage() {
           </p>
           <p className="mt-3">
             <strong>Inquiry messages ("Send My Info").</strong> A client can leave their name, phone and/or
-            email, and optional appointment details (cuddle type, requested date/time or "whenever you're
-            open," duration, and in-studio/outcall preference) for a cuddler without creating an account. This is
-            emailed directly to the cuddler and stored so it also appears in that cuddler's own dashboard.
-            It is never shown publicly and is only visible to the cuddler the client contacted.
+            email, and optional appointment details (requested date/time or "whenever you're open," how
+            long, and whether they'd rather meet at their place or the cuddler's) for a cuddler without
+            creating an account. This is emailed directly to the cuddler and stored so it also appears in
+            that cuddler's own dashboard. It is never shown publicly and is only visible to the cuddler the
+            client contacted.
           </p>
           <p className="mt-3">
             <strong>Customer reports (flagged contacts).</strong> A cuddler can report a client's phone number
-            or email — for example after a no-show, scam attempt, or harassment. We store only the contact
+            or email, for example after a no-show, scam attempt, or harassment. We store only the contact
             value and an internal note visible solely to the cuddler who submitted it; we never collect or
             store the client's name as part of a report. If that same phone number or email later contacts a
             different cuddler through the site, it is shown to that cuddler as a yellow or red warning
-            indicator (based on how many times it's been reported) — never with the reporting cuddler's
+            indicator (based on how many times it's been reported), never with the reporting cuddler's
             identity, their note, or any other detail attached, and never shown publicly.
           </p>
           <p className="mt-3">
             <strong>Payment information.</strong> Subscription and boost-credit payments are processed by
-            Stripe, Inc. We do not receive or store full payment card numbers — Stripe handles that directly and
+            Stripe, Inc. We do not receive or store full payment card numbers, since Stripe handles that directly and
             provides us only with limited transaction information (such as subscription status and payment
             history) needed to run the service.
           </p>
@@ -125,7 +126,7 @@ export default function PrivacyPage() {
           <p className="mt-3">
             Cuddlers can review and update most of their information directly from their dashboard at any
             time, including their social media marketing opt-in. Every promotional email includes an unsubscribe
-            link, and unsubscribing (or contacting us) stops promotional email immediately — it does not affect
+            link, and unsubscribing (or contacting us) stops promotional email immediately; it does not affect
             required account emails or your listing. As a {LEGAL_STATE}-based business, we honor requests from
             California residents to know what personal information we hold about them, correct it, or delete it,
             and we do not sell or share personal information as those terms are defined under California law.
@@ -136,7 +137,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="font-display text-xl font-semibold">Security</h2>
           <p className="mt-3">
-            We use industry-standard safeguards appropriate to the sensitivity of each type of data — including
+            We use industry-standard safeguards appropriate to the sensitivity of each type of data, including
             encrypted connections (HTTPS), one-way password hashing, and storing verification documents in a
             private, non-public location accessible only to authorized administrators. No method of storage or
             transmission is perfectly secure, and we cannot guarantee absolute security.

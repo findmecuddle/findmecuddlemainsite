@@ -36,7 +36,7 @@ export default async function CropPhotoPage(props: {
       </div>
 
       <p className="mt-3 max-w-xl text-xs text-stone2">
-        This only changes the small square thumbnail shown on the homepage and search cards — the full photo on{" "}
+        This only changes the small square thumbnail shown on the homepage and search cards. The full photo on{" "}
         {t.name}&rsquo;s public profile page stays exactly as they uploaded it. Drag on the photo below to draw a
         crop box, adjust it as needed, then save. You can undo this later from the Edit page if it doesn&rsquo;t
         look right.

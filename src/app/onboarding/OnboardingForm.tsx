@@ -28,7 +28,7 @@ export default function OnboardingForm() {
           />
         </div>
         <div>
-          <label className="label" htmlFor="location">Where You Practice</label>
+          <label className="label" htmlFor="location">Where You Cuddle</label>
           <input id="location" name="location" required className="field" placeholder="Zip code or City, ST" />
         </div>
       </div>
@@ -54,7 +54,7 @@ export default function OnboardingForm() {
         <label className="flex items-start gap-2.5 text-sm text-stone2">
           <input type="checkbox" name="marketingOptIn" className="mt-0.5 h-4 w-4 shrink-0 accent-spruce" />
           <span>
-            Send me occasional emails about promotions, tips, and updates from {SITE_NAME} — I can
+            Send me occasional emails about promotions, tips, and updates from {SITE_NAME}. I can
             unsubscribe anytime. (Optional.)
           </span>
         </label>

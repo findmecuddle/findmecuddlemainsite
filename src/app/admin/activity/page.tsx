@@ -86,7 +86,7 @@ export default async function AdminActivityPage() {
                 )}
                 <span className="font-medium text-ink">{entry.who}</span>{" "}
                 <span className="text-stone2">{entry.label}</span>
-                {entry.detail && <span className="text-stone2"> — {entry.detail}</span>}
+                {entry.detail && <span className="text-stone2">: {entry.detail}</span>}
               </span>
               <span className="whitespace-nowrap text-xs text-stone2">
                 {entry.createdAt.toLocaleString()}

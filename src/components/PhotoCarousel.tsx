@@ -20,7 +20,7 @@ export default function PhotoCarousel({ photos, alt }: { photos: Photo[]; alt: s
     <div>
       <div className="relative h-64 w-full overflow-hidden rounded-2xl bg-spruce-tint sm:h-80">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={photos[index].url} alt={`${alt} — photo ${index + 1}`} className="h-full w-full object-cover" />
+        <img src={photos[index].url} alt={`${alt}, photo ${index + 1}`} className="h-full w-full object-cover" />
         <span className="absolute right-3 top-3 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white">
           Featured photos
         </span>

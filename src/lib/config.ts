@@ -26,14 +26,14 @@ export const WEBSITE_URL_MAX_CHARS = 200;
 
 // --- Social profile links (not admin-reviewed, see schema.ts comment on socialLinks) ---
 export const SOCIAL_PLATFORMS: string[] = ["Instagram", "TikTok", "X"];
-export const SOCIAL_LINKS_MAX = 4;
+export const SOCIAL_LINKS_MAX = 3;
 export const SOCIAL_URL_MAX_CHARS = 200;
 
 // --- "Send My Info" inquiry form (see /api/inquiries) ---
 export const INQUIRY_MESSAGE_MAX_CHARS = 500;
 export const LOCATION_TYPE_OPTIONS: { value: "incall" | "outcall"; label: string }[] = [
-  { value: "incall", label: "In-Studio (At Their Place)" },
-  { value: "outcall", label: "Outcall (At My Place)" },
+  { value: "incall", label: "At Their Place" },
+  { value: "outcall", label: "At My Place" },
 ];
 // Same labels as RATE_DURATIONS above, kept as a separate plain-string list since an inquiry's
 // requested duration isn't tied to a specific priced column the way a listing's own rates are.
@@ -152,8 +152,15 @@ export const GENDER_OPTIONS: { value: "male" | "female"; label: string }[] = [
 // the form section in dashboard/ListingForm.tsx). Everything else in that section is free text;
 // these four are short enough, and common enough, to be worth a consistent dropdown instead. ---
 export const ENJOYS_PETS_OPTIONS: string[] = ["Yes", "No", "It Depends"];
-export const ACTIVE_LIFESTYLE_OPTIONS: string[] = ["Very Active / Athletic", "Moderately Active", "Not Very Active"];
-export const BODY_TYPE_OPTIONS: string[] = ["Slim", "Athletic", "Average", "Curvy", "Muscular", "Plus Size"];
+export const BODY_TYPE_OPTIONS: string[] = [
+  "Slim",
+  "Athletic",
+  "Average",
+  "A Little Extra",
+  "Curvy",
+  "Muscular",
+  "Plus Size",
+];
 export const HAIR_COLOR_OPTIONS: string[] = ["Black", "Brown", "Blonde", "Red", "Gray / Silver", "Other"];
 export const EYE_COLOR_OPTIONS: string[] = ["Brown", "Blue", "Green", "Hazel", "Gray", "Other"];
 

@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { ClientSafeCuddler } from "@/lib/auth";
 import { updateListing } from "@/app/actions";
 import { isVip, photoLimit } from "@/lib/stripe";
-import { RATE_CONTACT_LABEL, WEBSITE_URL_MAX_CHARS, GENDER_OPTIONS, SOCIAL_PLATFORMS, SOCIAL_LINKS_MAX, SOCIAL_URL_MAX_CHARS, ENJOYS_PETS_OPTIONS, ACTIVE_LIFESTYLE_OPTIONS, BODY_TYPE_OPTIONS, HAIR_COLOR_OPTIONS, EYE_COLOR_OPTIONS } from "@/lib/config";
+import { RATE_CONTACT_LABEL, GENDER_OPTIONS, SOCIAL_PLATFORMS, SOCIAL_LINKS_MAX, SOCIAL_URL_MAX_CHARS, ENJOYS_PETS_OPTIONS, BODY_TYPE_OPTIONS, HAIR_COLOR_OPTIONS, EYE_COLOR_OPTIONS } from "@/lib/config";
 import { parseSocialLinks } from "@/lib/socialLinks";
 import PhotoUploader from "./PhotoUploader";
 
@@ -163,7 +163,7 @@ export default function ListingForm({
       <div>
         <label className="label" htmlFor="headline">Headline</label>
         <input id="headline" name="headline" defaultValue={t.headline ?? ""} className="field"
-          placeholder="Deep tissue & sports cuddle — 10 years experience" maxLength={90} />
+          placeholder="Warm, easygoing cuddle sessions in a relaxed setting" maxLength={90} />
       </div>
 
       <div>
@@ -177,7 +177,7 @@ export default function ListingForm({
       </div>
 
       <div className="border-t border-line pt-4">
-        <label className="mt-3 flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="mobile" defaultChecked={t.mobile} className="h-4 w-4 accent-spruce" />
           {agencyAccount ? "Mobile Session (We Travel To The Client)" : "Mobile Session (I Travel To The Client)"}
         </label>
@@ -239,11 +239,30 @@ export default function ListingForm({
         </div>
       )}
 
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="label" htmlFor="location">Primary Location (Zip Or City, ST)</label>
+          <input id="location" name="location" defaultValue={t.zip || `${t.city}, ${t.state}`} className="field" required />
+        </div>
+        <div>
+          <label className="label" htmlFor="location2">Second Location {vip ? "(Optional)" : ""}</label>
+          {vip ? (
+            <input id="location2" name="location2" defaultValue={t.zip2 || (t.city2 ? `${t.city2}, ${t.state2}` : "")}
+              className="field" placeholder="Zip code or City, ST" />
+          ) : (
+            <p className="rounded-lg border border-line bg-porcelain px-3 py-2.5 text-sm leading-relaxed text-stone2">
+              <Link href="/pricing" className="font-medium text-spruce hover:underline">Upgrade to Monthly VIP</Link>
+              {" "}to post a second location.
+            </p>
+          )}
+        </div>
+      </div>
+
       {!agencyAccount && (
         <div className="border-t border-line pt-4">
           <label className="label">Getting To Know You</label>
           <p className="mt-1 text-xs text-stone2">
-            Optional — helps clients get a sense of who you are beyond the logistics. Shown on your
+            Optional; helps clients get a sense of who you are beyond the logistics. Shown on your
             public listing only for whichever fields you fill in.
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -279,15 +298,6 @@ export default function ListingForm({
             <div>
               <label className="label" htmlFor="favoriteShow">Favorite TV Show</label>
               <input id="favoriteShow" name="favoriteShow" defaultValue={t.favoriteShow ?? ""} className="field" />
-            </div>
-            <div>
-              <label className="label" htmlFor="activeLifestyle">Activity Level</label>
-              <select id="activeLifestyle" name="activeLifestyle" defaultValue={t.activeLifestyle ?? ""} className="field">
-                <option value="">Prefer not to say</option>
-                {ACTIVE_LIFESTYLE_OPTIONS.map((o) => (
-                  <option key={o} value={o}>{o}</option>
-                ))}
-              </select>
             </div>
             <div>
               <label className="label" htmlFor="height">Height</label>
@@ -333,53 +343,6 @@ export default function ListingForm({
           </div>
         </div>
       )}
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="label" htmlFor="location">Primary Location (Zip Or City, ST)</label>
-          <input id="location" name="location" defaultValue={t.zip || `${t.city}, ${t.state}`} className="field" required />
-        </div>
-        <div>
-          <label className="label" htmlFor="location2">Second Location {vip ? "(Optional)" : ""}</label>
-          {vip ? (
-            <input id="location2" name="location2" defaultValue={t.zip2 || (t.city2 ? `${t.city2}, ${t.state2}` : "")}
-              className="field" placeholder="Zip code or City, ST" />
-          ) : (
-            <p className="rounded-lg border border-line bg-porcelain px-3 py-2.5 text-sm leading-relaxed text-stone2">
-              <Link href="/pricing" className="font-medium text-spruce hover:underline">Upgrade to Monthly VIP</Link>
-              {" "}to post a second location.
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="border-t border-line pt-4">
-        <label className="label" htmlFor="websiteUrl">Your Website (Optional)</label>
-        <input
-          id="websiteUrl"
-          name="websiteUrl"
-          type="text"
-          defaultValue={t.websiteUrl ?? ""}
-          className="field"
-          placeholder="yourbusiness.com"
-          maxLength={WEBSITE_URL_MAX_CHARS}
-        />
-        <p className="mt-1 text-xs text-stone2">
-          Link to your own personal or business website. Our team reviews every new or changed link before it's
-          shown on your public listing — we don't allow links we haven't checked.
-        </p>
-        {t.websiteStatus === "pending" && (
-          <p className="mt-2 text-xs font-medium text-gold">Pending review — not shown on your listing yet.</p>
-        )}
-        {t.websiteStatus === "approved" && (
-          <p className="mt-2 text-xs font-medium text-spruce">✓ Approved — shown on your public listing.</p>
-        )}
-        {t.websiteStatus === "rejected" && (
-          <p className="mt-2 text-xs font-medium text-red-700">
-            Not approved{t.websiteNote ? `: ${t.websiteNote}` : ""}.
-          </p>
-        )}
-      </div>
 
       <div className="border-t border-line pt-4">
         <label className="label">Social Links (Optional, Up To {SOCIAL_LINKS_MAX})</label>

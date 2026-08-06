@@ -30,7 +30,7 @@ export default function ReviewForm({
   if (result?.ok) {
     return (
       <p className="mt-3 text-sm text-spruce">
-        Thanks — your review is submitted and will show up once it's approved.
+        Thanks! Your review is submitted and will show up once it's approved.
       </p>
     );
   }

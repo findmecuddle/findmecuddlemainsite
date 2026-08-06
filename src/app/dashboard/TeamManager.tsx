@@ -22,7 +22,7 @@ export default function TeamManager({
           Your Team {employeeLimit > 0 && <span className="text-stone2">({employees.length}/{employeeLimit})</span>}
         </h2>
         <p className="mt-1 text-sm text-stone2">
-          Add each cuddler who works at your agency — their photo, hours, and cuddle types show up
+          Add each cuddler who works at your agency: their photo, hours, and cuddle types show up
           on your public listing.
         </p>
       </div>

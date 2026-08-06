@@ -29,10 +29,10 @@ export default function HowItWorksPage() {
         </div>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone2">
           Instead of only a phone number, every profile has a "Send My Info" form. A client fills in their
-          name, phone or email, the cuddle type and duration they want, whether they'd rather come to you
-          or have you come to them, and roughly when. No account or sign-up required on their end. Outside
-          the hours you've set to be reachable by call or text, this form is the main way clients get in
-          touch, so it's worth keeping an eye on.
+          name, phone or email, how long they're hoping for, whether they'd rather come to you or have you
+          come to them, and roughly when. No account or sign-up required on their end. Outside the hours
+          you've set to be reachable by call or text, this form is the main way clients get in touch, so
+          it's worth keeping an eye on.
         </p>
       </section>
 

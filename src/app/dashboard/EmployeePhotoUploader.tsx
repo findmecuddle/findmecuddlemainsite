@@ -53,7 +53,7 @@ export default function EmployeePhotoUploader({
 
   return (
     <div>
-      <label className="label">Photo (HD required, 1280×720 minimum — real photos only, no AI-generated)</label>
+      <label className="label">Photo (HD required, 1280×720 minimum; real photos only, no AI-generated)</label>
       <div className="mt-2 flex items-center gap-3">
         <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-line bg-spruce-tint">
           {url ? (

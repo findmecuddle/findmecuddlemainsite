@@ -32,7 +32,7 @@ export async function generateMetadata(props: { params: Promise<{ slug: string }
   const t = rows[0];
   if (!t || !isLive(t)) return { title: "Not Found" };
 
-  const title = `${t.name} — ${t.accountType === "agency" ? "Agency" : "Cuddle Professional"} in ${t.city}, ${t.state}`;
+  const title = `${t.name}: ${t.accountType === "agency" ? "Agency" : "Cuddle Professional"} in ${t.city}, ${t.state}`;
   const description =
     t.headline ||
     (t.bio ? t.bio.slice(0, 155) : `Book a cuddle session with ${t.name} in ${t.city}, ${t.state} on ${SITE_NAME}.`);
@@ -86,7 +86,6 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
     { label: "Favorite Things To Do", value: t.favoriteActivities ?? "" },
     { label: "Favorite Movie", value: t.favoriteMovie ?? "" },
     { label: "Favorite TV Show", value: t.favoriteShow ?? "" },
-    { label: "Activity Level", value: t.activeLifestyle ?? "" },
     { label: "Height", value: t.height ?? "" },
     { label: "Body Type", value: t.bodyType ?? "" },
     { label: "Hair Color", value: t.hairColor ?? "" },
@@ -196,7 +195,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={p.url}
-                      alt={`${t.name} — photo ${i + 1}`}
+                      alt={`${t.name}, photo ${i + 1}`}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -405,7 +404,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
                 {t.websiteUrl}
               </a>
               <p className="mt-1 text-xs text-stone2">
-                External link, provided by {t.name.split(" ")[0]} — {SITE_NAME} doesn't control or vouch for its
+                External link, provided by {t.name.split(" ")[0]}. {SITE_NAME} doesn't control or vouch for its
                 content.
               </p>
             </div>
@@ -476,7 +475,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
             <div className="mt-4 grid gap-2">
               {contactLocked && (t.acceptsCalls || t.acceptsTexts) && t.phone && (
                 <p className="rounded-lg bg-porcelain px-3 py-2 text-xs text-stone2">
-                  {t.name.split(" ")[0]} is currently outside business hours — call and text open
+                  {t.name.split(" ")[0]} is currently outside business hours; call and text open
                   back up during the hours listed above. Email, or send your info below, in the meantime.
                 </p>
               )}

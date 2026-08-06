@@ -10,7 +10,7 @@ import {
 
 export const metadata = {
   title: "Frequently Asked Questions",
-  description: `Common questions about ${SITE_NAME}, for clients looking for a cuddle professional or agency, and for cuddlers and agencies advertising their practice.`,
+  description: `Common questions about ${SITE_NAME}, for clients looking for a cuddler, and for cuddlers advertising their listing.`,
 };
 
 // Every answer here is sourced from what's actually true elsewhere in the app (Terms, Privacy
@@ -81,11 +81,11 @@ const CLIENT_FAQS: { q: string; a: React.ReactNode }[] = [
 
 const CUDDLER_FAQS: { q: string; a: React.ReactNode }[] = [
   {
-    q: "How much does it cost to list my practice?",
+    q: "How much does it cost to list on Find Me Cuddle?",
     a: (
       <>
-        Weekly, Monthly, and Monthly VIP plans. Current prices (pulled live from Stripe, so
-        they're always accurate) are on the{" "}
+        Standard and VIP plans. Current prices (pulled live from Stripe, so they're always
+        accurate) are on the{" "}
         <Link href="/pricing" className="font-medium text-spruce hover:underline">
           pricing page
         </Link>
@@ -95,12 +95,11 @@ const CUDDLER_FAQS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "What's the difference between Weekly, Monthly, and Monthly VIP?",
+    q: "What's the difference between Standard and VIP?",
     a: (
       <>
-        Weekly and Monthly are the same listing, billed on a different cycle. Monthly VIP adds{" "}
-        {VIP_BOOST_GRANT} free boost credits every billing cycle, a second practice location, and
-        up to 6 rotating photos on your ad (vs. 3 on the other plans).
+        VIP adds {VIP_BOOST_GRANT} free boost credits every billing cycle, a second location, and
+        up to 6 rotating photos on your ad (vs. 3 on Standard).
       </>
     ),
   },

@@ -33,10 +33,10 @@ export default function OpenNowButton({
           {active ? "Open Now Active" : "I'm Open Now"}
         </button>
       </form>
-      {!live && <p className="mt-2 text-xs text-stone2">Go live first — this only works on active listings.</p>}
+      {!live && <p className="mt-2 text-xs text-stone2">Go live first. This only works on active listings.</p>}
       {live && active && expiresAt && (
         <p className="mt-2 text-xs font-medium text-emerald-700">
-          Showing as Open Now — <CountdownClock until={new Date(expiresAt).toISOString()} />
+          Showing as Open Now: <CountdownClock until={new Date(expiresAt).toISOString()} />
         </p>
       )}
     </div>

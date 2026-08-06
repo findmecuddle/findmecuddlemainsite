@@ -13,7 +13,7 @@ import { resolveLocationStrict } from "./geo";
 import { normalizeWebsiteUrl } from "./url";
 import { buildSocialLinksJson } from "./socialLinks";
 import { checkGoLive } from "./activity";
-import { WEEK_DAYS, HOUR_BLOCKS_PER_DAY, ENJOYS_PETS_OPTIONS, ACTIVE_LIFESTYLE_OPTIONS, BODY_TYPE_OPTIONS, HAIR_COLOR_OPTIONS, EYE_COLOR_OPTIONS } from "./config";
+import { WEEK_DAYS, HOUR_BLOCKS_PER_DAY, ENJOYS_PETS_OPTIONS, BODY_TYPE_OPTIONS, HAIR_COLOR_OPTIONS, EYE_COLOR_OPTIONS } from "./config";
 
 export async function applyListingUpdate(
   id: string,
@@ -65,7 +65,9 @@ export async function applyListingUpdate(
   const favoriteMovie = text("favoriteMovie");
   const favoriteShow = text("favoriteShow");
   const enjoysAboutCuddling = text("enjoysAboutCuddling", 500);
-  const activeLifestyle = pick("activeLifestyle", ACTIVE_LIFESTYLE_OPTIONS);
+  // No longer collected via the form (dropped per product decision) — carry forward whatever's
+  // already stored instead of wiping it on every save. Column stays in schema.ts either way.
+  const activeLifestyle = existing.activeLifestyle;
   const height = text("height", 20);
   const bodyType = pick("bodyType", BODY_TYPE_OPTIONS);
   const hairColor = pick("hairColor", HAIR_COLOR_OPTIONS);

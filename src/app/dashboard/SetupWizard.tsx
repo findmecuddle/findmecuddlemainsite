@@ -76,7 +76,7 @@ export default function SetupWizard({
     {
       id: "ad",
       title: agency ? "Fill Out Your Agency's Ad" : "Fill Out Your Ad",
-      description: "Add your bio, services, rates, and photos — this is what clients will see.",
+      description: "Add your bio, services, rates, and photos: this is what clients will see.",
       isComplete: !!(t.services || t.bio || (agency && employees.length > 0)) && attestConfirmed,
       render: () => (
         <div className="grid gap-4">
@@ -130,7 +130,7 @@ export default function SetupWizard({
     {
       id: "plan",
       title: agency ? "Choose Your Agency Plan" : "Choose Your Plan",
-      description: "Pick a listing plan to get started — you can change plans anytime later.",
+      description: "Pick a listing plan to get started. You can change plans anytime later.",
       isComplete: t.subStatus === "active",
       render: () => (
         <form action="/api/checkout" method="POST" className="card grid gap-3 p-6">
@@ -162,7 +162,7 @@ export default function SetupWizard({
     {
       id: "verification",
       title: "Verify Your Certification & Identity",
-      description: "Submit your certification and complete a quick ID check — we review both together.",
+      description: "Submit your certification and complete a quick ID check. We review both together.",
       isComplete:
         (!!t.verificationSubmittedAt || t.licenseNotRequired) &&
         (t.identityStatus === "verified" || t.identityStatus === "pending"),
@@ -179,7 +179,7 @@ export default function SetupWizard({
           />
           <IdentityVerification cuddler={t} />
           <p className="text-xs text-stone2">
-            Approval can take up to 24 hours. Try refreshing this page every so often — it often goes through
+            Approval can take up to 24 hours. Try refreshing this page every so often; it often goes through
             faster than that.
           </p>
           <VerificationFailureNotice cuddler={t} />
@@ -189,7 +189,7 @@ export default function SetupWizard({
     {
       id: "publish",
       title: "Publish Your Ad",
-      description: "Last step — publish to go live once everything above is approved.",
+      description: "Last step: publish to go live once everything above is approved.",
       isComplete: true,
       render: () => <PublishStep cuddler={t} />,
     },
@@ -238,7 +238,7 @@ export default function SetupWizard({
 
         {stepIndex === steps.length - 1 ? (
           <button type="button" onClick={finish} disabled={isPending} className="btn-primary">
-            Finish Setup — Go To My Dashboard
+            Finish Setup & Go To My Dashboard
           </button>
         ) : (
           <div className="text-right">
@@ -277,7 +277,7 @@ function PublishStep({ cuddler: t }: { cuddler: SafeCuddler }) {
         </>
       ) : (
         <p className="text-sm text-stone2">
-          You're all set on your end — we're just finishing up review on your license and/or identity check.
+          You're all set on your end. We're just finishing up review on your license and/or identity check.
           Approval can take up to 24 hours; try refreshing this page every so often, it often goes through
           faster than that. Your ad goes live automatically once approved. Finish setup below to go to your
           dashboard, where you can track the status and make changes anytime.

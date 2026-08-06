@@ -190,9 +190,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
                 {me.subStatus !== "active"
                   ? "Choose A Listing Plan Below To Go Live."
                   : me.verificationStatus !== "approved"
-                  ? "Submit Your Cuddle Certification Below — Your Listing Can't Go Live Until It's Approved."
+                  ? "Submit Your Cuddle Certification Below: Your Listing Can't Go Live Until It's Approved."
                   : me.identityStatus !== "verified"
-                  ? "Complete The Quick Identity Check Below — Your Listing Can't Go Live Until It's Verified."
+                  ? "Complete The Quick Identity Check Below: Your Listing Can't Go Live Until It's Verified."
                   : paused
                   ? `Your Listing Is Paused For Vacation Until ${pauseResumesAt?.toLocaleDateString()}. Resume Anytime Below.`
                   : "Click “Publish My Ad” Below To Go Live."}
@@ -296,7 +296,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
                     </select>
                     <button className="btn-ghost w-full text-sm">Switch Plan</button>
                     <p className="text-xs text-stone2">
-                      Charges or credits the prorated difference right away — no need to cancel first.
+                      Charges or credits the prorated difference right away, no need to cancel first.
                     </p>
                   </form>
                 )}

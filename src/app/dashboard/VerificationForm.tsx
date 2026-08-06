@@ -89,7 +89,7 @@ export default function VerificationForm({
         </div>
         <p className="mt-1 text-xs text-stone2">
           {notRequired
-            ? `Confirmed — ${cuddler.state} doesn't require certification for cuddle therapy, and our team has reviewed that.`
+            ? `Confirmed: ${cuddler.state} doesn't require certification for cuddle therapy, and our team has reviewed that.`
             : "Your certification has been reviewed and verified."}
         </p>
       </section>
@@ -140,7 +140,7 @@ export default function VerificationForm({
       <div className="mt-3 border-t border-line pt-3 text-center">
         {notRequired && !busy ? (
           <p className="text-[11px] text-stone2">
-            You confirmed {cuddler.state} doesn't require certification — an admin will check this.
+            You confirmed {cuddler.state} doesn't require certification; an admin will check this.
           </p>
         ) : confirming ? (
           <div className="grid gap-2">
@@ -150,7 +150,7 @@ export default function VerificationForm({
             </p>
             <div className="flex justify-center gap-2">
               <button type="button" disabled={busy} onClick={submitNotRequired} className="btn-primary text-sm disabled:opacity-50">
-                {busy ? "Submitting…" : "Confirm — No Certification Required"}
+                {busy ? "Submitting…" : "Confirm: No Certification Required"}
               </button>
               <button type="button" disabled={busy} onClick={() => setConfirming(false)} className="btn-ghost text-sm">
                 Cancel

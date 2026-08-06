@@ -23,7 +23,7 @@ export default function DeleteAccountForm() {
       ) : (
         <form action={action} className="mt-4 grid gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
           <p className="text-xs font-medium text-red-800">
-            Your subscription ends immediately, not at the end of your current billing period — any
+            Your subscription ends immediately, not at the end of your current billing period. Any
             days you've already paid for but haven't used are forfeited, with no refund or proration.
           </p>
           <div>
