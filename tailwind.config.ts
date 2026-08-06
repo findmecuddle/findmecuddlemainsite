@@ -5,12 +5,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        porcelain: "#F7F5F0",
-        ink: "#22211D",
-        stone2: "#6B685F",
-        spruce: { DEFAULT: "#23543F", deep: "#173A2B", tint: "#E7EEE8" },
+        porcelain: "#FAF5F4",
+        ink: "#241715",
+        stone2: "#6B5F5E",
+        spruce: { DEFAULT: "#B3261E", deep: "#7F1B15", tint: "#FBEAE8" },
         gold: "#B98F3E",
-        line: "#E3E0D8",
+        line: "#E8DBD9",
       },
       fontFamily: {
         display: ["var(--font-display)", "serif"],
