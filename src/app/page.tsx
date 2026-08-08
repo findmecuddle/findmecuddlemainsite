@@ -79,6 +79,12 @@ export default async function HomePage() {
     <>
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Link
+        href="/pricing"
+        className="block border-b border-line bg-spruce-deep px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-spruce"
+      >
+        Cuddlers: get your first month free with code <span className="font-semibold">FIRSTMONTHFREE</span> →
+      </Link>
       <section
         className="border-b border-line bg-cover bg-center"
         style={{

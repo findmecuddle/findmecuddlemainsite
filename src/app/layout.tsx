@@ -10,6 +10,14 @@ export const metadata: Metadata = {
   description:
     "Find Me Cuddle: search independent cuddlers near you by zip code or city. In-person and virtual sessions.",
   manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   verification: {
     google: "vD6qNaffOnVOBUJ_tx6sFZEKU3GH6t9FxOmmuQT_d0E",
     other: {
