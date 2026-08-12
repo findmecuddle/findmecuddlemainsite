@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { currentClerkUserId, currentCuddler } from "@/lib/auth";
+import { SignOutButton } from "@clerk/nextjs";
+import { currentClerkUserId, currentCuddler, clerkEmail } from "@/lib/auth";
 import OnboardingForm from "./OnboardingForm";
 
 export const dynamic = "force-dynamic";
@@ -14,12 +15,22 @@ export default async function OnboardingPage() {
   const already = await currentCuddler();
   if (already) redirect("/dashboard");
 
+  const email = await clerkEmail(userId);
+
   return (
     <div className="container-page flex justify-center py-16">
       <div className="card w-full max-w-md p-8">
         <h1 className="font-display text-2xl font-semibold">Finish setting up your listing</h1>
         <p className="mt-1 text-sm text-stone2">
           Your account's created, just a couple more details before your dashboard is ready.
+        </p>
+        <p className="mt-2 text-xs text-stone2">
+          Signed in{email ? ` as ${email}` : ""}.{" "}
+          <SignOutButton>
+            <button type="button" className="font-medium text-spruce hover:underline">
+              Not you? Log out
+            </button>
+          </SignOutButton>
         </p>
         <OnboardingForm />
       </div>

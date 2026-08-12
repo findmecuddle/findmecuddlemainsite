@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkProvider, SignOutButton } from "@clerk/nextjs";
 import "./globals.css";
 import { SITE_NAME } from "@/lib/config";
-import { currentCuddler } from "@/lib/auth";
+import { currentClerkUserId, currentCuddler } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: { default: `${SITE_NAME} · Find A Cuddler Near You`, template: `%s · ${SITE_NAME}` },
@@ -28,6 +28,11 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const me = await currentCuddler();
+  // Someone can be signed in to Clerk without a cuddlers row yet (mid-onboarding, e.g. stuck on
+  // /onboarding — see dashboard/page.tsx and onboarding/page.tsx). `me` is null in that state, so
+  // it must be checked separately, otherwise these users see "Log In / Join Today" in the header
+  // as if they were signed out, with no way to find a Log Out button anywhere on the site.
+  const clerkUserId = me ? null : await currentClerkUserId();
   return (
     <ClerkProvider>
     <html lang="en">
@@ -56,6 +61,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </Link>
               {me ? (
                 <Link href="/dashboard" className="btn-ghost">My Listing</Link>
+              ) : clerkUserId ? (
+                <>
+                  <Link href="/onboarding" className="px-3 py-2 text-stone2 hover:text-ink">
+                    Finish Setup
+                  </Link>
+                  <SignOutButton>
+                    <button className="btn-ghost">Log Out</button>
+                  </SignOutButton>
+                </>
               ) : (
                 <>
                   <Link href="/login" className="px-3 py-2 text-stone2 hover:text-ink">Log In</Link>
