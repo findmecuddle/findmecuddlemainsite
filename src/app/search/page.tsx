@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Find A Cuddle Professional Near You",
-  description: "Search independent, certified cuddle professionals by zip code, city, or address.",
+  description: "Search independent, identity-verified cuddle professionals by zip code, city, or address.",
 };
 
 type Result = NearbyResult;

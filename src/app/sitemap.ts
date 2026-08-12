@@ -33,7 +33,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       published: cuddlers.published,
       subStatus: cuddlers.subStatus,
       activeUntil: cuddlers.activeUntil,
-      verificationStatus: cuddlers.verificationStatus,
       identityStatus: cuddlers.identityStatus,
       pausedAt: cuddlers.pausedAt,
       suspendedAt: cuddlers.suspendedAt,

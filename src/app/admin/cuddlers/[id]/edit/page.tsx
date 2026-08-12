@@ -46,8 +46,6 @@ export default async function AdminEditCuddlerPage(props: { params: Promise<{ id
     ? `No active subscription (subscription status: "${t.subStatus}").`
     : t.activeUntil && t.activeUntil.getTime() < Date.now()
     ? `Subscription period ended ${t.activeUntil.toLocaleDateString()} (Stripe should renew or cancel it shortly).`
-    : t.verificationStatus !== "approved"
-    ? `Certification review isn't approved yet (status: "${t.verificationStatus}").`
     : t.identityStatus !== "verified"
     ? `Identity check isn't verified yet (status: "${t.identityStatus}"). See the Stripe Identity card below.`
     : paused
@@ -82,17 +80,6 @@ export default async function AdminEditCuddlerPage(props: { params: Promise<{ id
           <p className="font-medium">
             {t.subStatus}
             {t.plan ? ` · ${t.plan}` : ""}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs text-stone2">Certification Review</p>
-          <p className="font-medium">
-            {t.verificationStatus}
-            {t.verificationStatus !== "approved" && (
-              <Link href="/admin" className="ml-2 text-xs font-medium text-spruce hover:underline">
-                Review Queue
-              </Link>
-            )}
           </p>
         </div>
         <div>

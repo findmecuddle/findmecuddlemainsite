@@ -29,14 +29,10 @@ export default function PrivacyPage() {
             location(s), service descriptions, rates, hours, and any photos they upload for their ad.
           </p>
           <p className="mt-3">
-            <strong>Identity verification documents.</strong> Before a cuddler's listing can go live, we
-            require a photo of any cuddle therapy certification they hold (or an attestation that they don't
-            hold one) and a government-issued photo ID. These are the most sensitive documents we handle, and
-            they're treated differently from ad photos: they're stored in a separate, private location that is
-            never publicly accessible, and only accessible to a small number of authorized administrators
-            reviewing the submission. We use these documents solely to confirm a cuddler's identity and
-            certification before allowing their listing to appear publicly, and they are never shown to clients
-            or displayed anywhere on the site.
+            <strong>Identity verification.</strong> Before a cuddler's listing can go live, we require a
+            government-ID and live-selfie check, handled entirely by Stripe Identity's hosted verification
+            flow. We never receive or store the ID photo or selfie ourselves, only the pass/fail result. This
+            confirms a cuddler's identity before allowing their listing to appear publicly.
           </p>
           <p className="mt-3">
             <strong>Reviews and reports.</strong> Clients can leave a review or submit a report about a listing

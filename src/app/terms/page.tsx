@@ -46,24 +46,21 @@ export default function TermsPage() {
         <section>
           <h2 className="font-display text-xl font-semibold">Eligibility</h2>
           <p className="mt-3">
-            You must be at least 18 years old to use {SITE_NAME}. If a cuddler holds any certification, permit,
-            or registration for cuddle therapy or comfort-touch services in their state or local jurisdiction,
-            they must keep it current for as long as their listing is active. Most jurisdictions do not
-            currently license or certify this field, so certification is voluntary rather than a legal
-            requirement in most places, cuddlers without one can attest to that during verification instead.
+            You must be at least 18 years old to use {SITE_NAME}. Most jurisdictions do not license or certify
+            cuddle therapy or comfort-touch services, so no certification, permit, or registration is required
+            to list here. If a cuddler holds one anyway, they're responsible for keeping it current on their
+            own; we don't track or verify it.
           </p>
         </section>
 
         <section>
           <h2 className="font-display text-xl font-semibold">Identity verification</h2>
           <p className="mt-3">
-            Before a listing can go live, we require a cuddler to submit a photo of any cuddle therapy
-            certification they hold (or confirm they don't hold one, since most states don't require one) and
-            pass a government-issued photo ID and live-selfie check, which we review before approving the
-            listing. This review confirms that the submitted documents were reviewed and appear to match. It
-            is not a guarantee of a cuddler's ongoing conduct, and clients should use their own judgment the
-            same way they would with any independent contractor. Submitting false, expired, or altered
-            documents is grounds for immediate account termination.
+            Before a listing can go live, we require a cuddler to pass a government-issued photo ID and
+            live-selfie check, reviewed automatically. This confirms the ID was checked and appears to match
+            the selfie. It is not a guarantee of a cuddler's ongoing conduct, and clients should use their own
+            judgment the same way they would with any independent contractor. Submitting a false, expired, or
+            altered ID is grounds for immediate account termination.
           </p>
         </section>
 

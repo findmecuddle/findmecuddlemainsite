@@ -96,7 +96,7 @@ export default async function AdminCuddlersPage(
                     {t.paused && <span className="ml-2 text-xs font-medium text-gold">Paused</span>}
                   </p>
                   <p className="mt-0.5 text-xs text-stone2">
-                    {t.email} · Plan: {t.subStatus} · Certification: {t.verificationStatus} · ID Check: {t.identityStatus}
+                    {t.email} · Plan: {t.subStatus} · ID Check: {t.identityStatus}
                     {" · "}Joined {t.createdAt.toLocaleDateString()}
                   </p>
                 </div>

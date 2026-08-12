@@ -14,9 +14,8 @@ const COLUMNS = {
 } as const;
 
 // Streams report evidence photos straight from the private bucket — never a public URL, never
-// cached by a CDN, gated on an active admin session. Same pattern as
-// /api/admin/verification-image. Evidence can contain sensitive material (faces, locations,
-// alleged misconduct), so it must never be reachable by a plain link.
+// cached by a CDN, gated on an active admin session. Evidence can contain sensitive material
+// (faces, locations, alleged misconduct), so it must never be reachable by a plain link.
 export async function GET(req: NextRequest) {
   if (!(await isAdmin())) return NextResponse.json({ error: "Not authorized." }, { status: 403 });
 

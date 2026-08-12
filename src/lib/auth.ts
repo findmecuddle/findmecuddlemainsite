@@ -8,8 +8,8 @@ import { cuddlers, type Cuddler } from "./schema";
 // fetches the full row (server-side code, e.g. actions.ts, legitimately needs all of it), but
 // anything passed as a prop into a "use client" component gets serialized into the page's RSC
 // payload and is visible in the browser, so dashboard/page.tsx must pass `toClientSafeCuddler(me)`
-// — never `me` itself — into VerificationForm/IdentityVerification/ListingForm (and, transitively,
-// PhotoUploader, which ListingForm renders).
+// — never `me` itself — into IdentityVerification/ListingForm (and, transitively, PhotoUploader,
+// which ListingForm renders).
 const SENSITIVE_FIELDS = [
   "passwordHash",
   "resetTokenHash",

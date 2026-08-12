@@ -18,7 +18,6 @@ import ListingForm from "./ListingForm";
 import HoursForm from "./HoursForm";
 import BoostButton from "./BoostButton";
 import CountdownClock from "./CountdownClock";
-import VerificationForm from "./VerificationForm";
 import IdentityVerification from "./IdentityVerification";
 import ChangePasswordForm from "./ChangePasswordForm";
 import CancelSubscriptionForm from "./CancelSubscriptionForm";
@@ -90,7 +89,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
   if (!me.setupCompletedAt && !me.wentLiveAt) {
     return (
       <SetupWizard
-        cuddler={{ ...safeCuddler, hasLicenseOnFile: !!me.licenseKey }}
+        cuddler={safeCuddler}
         agency={agency}
         employees={employees}
         employeeLimit={agencyEmployeeLimit(me)}
@@ -146,7 +145,6 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
         <div className="grid h-fit gap-6">
           {activeTab === "dashboard" && (
             <>
-              <VerificationForm cuddler={{ ...safeCuddler, hasLicenseOnFile: !!me.licenseKey }} />
               <IdentityVerification cuddler={safeCuddler} />
               <ListingForm cuddler={safeCuddler} />
               {agency && <TeamManager employees={employees} employeeLimit={agencyEmployeeLimit(me)} />}
@@ -189,8 +187,6 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
               <p className="mt-1 text-xs text-stone2">
                 {me.subStatus !== "active"
                   ? "Choose A Listing Plan Below To Go Live."
-                  : me.verificationStatus !== "approved"
-                  ? "Submit Your Cuddle Certification Below: Your Listing Can't Go Live Until It's Approved."
                   : me.identityStatus !== "verified"
                   ? "Complete The Quick Identity Check Below: Your Listing Can't Go Live Until It's Verified."
                   : paused
@@ -205,7 +201,6 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
             )}
 
             {me.subStatus === "active" &&
-              me.verificationStatus === "approved" &&
               me.identityStatus === "verified" &&
               !suspended &&
               !paused && (
@@ -226,7 +221,6 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
             </div>
 
             {me.subStatus === "active" &&
-              me.verificationStatus === "approved" &&
               me.identityStatus === "verified" && (
               <div className="mt-3 border-t border-line pt-3">
                 {paused ? (

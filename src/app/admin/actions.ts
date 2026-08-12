@@ -262,54 +262,11 @@ export async function dismissReport(formData: FormData) {
   revalidatePath("/admin");
 }
 
-// ---------- Identity verification ----------
-
-export async function pendingVerifications() {
-  await requireAdmin();
-  return db
-    .select({
-      id: cuddlers.id,
-      name: cuddlers.name,
-      slug: cuddlers.slug,
-      email: cuddlers.email,
-      state: cuddlers.state,
-      licenseKey: cuddlers.licenseKey,
-      licenseNotRequired: cuddlers.licenseNotRequired,
-      identityStatus: cuddlers.identityStatus,
-      verificationSubmittedAt: cuddlers.verificationSubmittedAt,
-    })
-    .from(cuddlers)
-    .where(eq(cuddlers.verificationStatus, "pending"))
-    .orderBy(desc(cuddlers.verificationSubmittedAt));
-}
-
-export async function approveVerification(formData: FormData) {
-  const admin = await requireAdmin();
-  const id = String(formData.get("id") || "");
-  const slug = String(formData.get("slug") || "");
-  if (!id) return;
-  await db
-    .update(cuddlers)
-    .set({ verificationStatus: "approved", verificationNote: null, verifiedAt: new Date() })
-    .where(eq(cuddlers.id, id));
-  await logAction(admin, "approve_verification", { targetType: "verification", targetId: id, detail: slug || undefined });
-  await checkGoLive(id);
-  revalidatePath("/admin");
-  if (slug) revalidatePath(`/cuddlers/${slug}`);
-}
-
-export async function rejectVerification(formData: FormData) {
-  const admin = await requireAdmin();
-  const id = String(formData.get("id") || "");
-  const note = String(formData.get("note") || "").trim();
-  if (!id) return;
-  await db
-    .update(cuddlers)
-    .set({ verificationStatus: "rejected", verificationNote: note || "Documents didn't meet our requirements." })
-    .where(eq(cuddlers.id, id));
-  await logAction(admin, "reject_verification", { targetType: "verification", targetId: id, detail: note || undefined });
-  revalidatePath("/admin");
-}
+// Cuddle certification review (pendingVerifications/approveVerification/rejectVerification) was
+// removed the same way — cuddle therapy isn't state-licensed, so this was carryover from
+// findmemassage's real license-verification gate and never meant anything here. Identity
+// verification (below) is still automatic via Stripe, unaffected. See the schema.ts comment on
+// verificationStatus — those columns are kept, frozen, unused.
 
 // Photo content review was removed — every upload already passes through HD validation,
 // EXIF-stripping, and re-encoding (see /api/photos/route.ts) and now goes live immediately,
@@ -676,7 +633,6 @@ export async function allCuddlers() {
       published: cuddlers.published,
       subStatus: cuddlers.subStatus,
       activeUntil: cuddlers.activeUntil,
-      verificationStatus: cuddlers.verificationStatus,
       identityStatus: cuddlers.identityStatus,
       pausedAt: cuddlers.pausedAt,
       suspendedAt: cuddlers.suspendedAt,

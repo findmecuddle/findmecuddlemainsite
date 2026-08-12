@@ -14,14 +14,17 @@ export function stripe(): Stripe {
 
 /**
  * A listing is visible in search when published + subscription active + not expired
- * + an admin has approved the cuddle license AND Stripe Identity has verified the
- * cuddler's government ID against a live selfie + they aren't currently on a vacation pause.
+ * + Stripe Identity has verified the cuddler's government ID against a live selfie
+ * + they aren't currently on a vacation pause.
+ *
+ * Cuddle certification (verificationStatus) is NOT part of this gate — it was carryover from
+ * findmemassage's real license-verification requirement and has been fully removed. See the
+ * schema.ts comment on verificationStatus.
  */
 export function isLive(t: {
   published: boolean;
   subStatus: string;
   activeUntil: Date | null;
-  verificationStatus: string;
   identityStatus: string;
   pausedAt: Date | null;
   suspendedAt: Date | null;
@@ -30,7 +33,6 @@ export function isLive(t: {
     t.published &&
     t.subStatus === "active" &&
     (!t.activeUntil || t.activeUntil.getTime() > Date.now()) &&
-    t.verificationStatus === "approved" &&
     t.identityStatus === "verified" &&
     !isPaused(t) &&
     !isSuspended(t)
@@ -60,11 +62,11 @@ export function isPaused(t: { pausedAt: Date | null }) {
 }
 
 /**
- * True once BOTH the license has been admin-approved AND Stripe Identity has verified the
- * cuddler's government ID + selfie — shown as a "Verified" badge.
+ * True once Stripe Identity has verified the cuddler's government ID + selfie — shown as a
+ * "Verified" badge. Certification is no longer part of this (see isLive() above).
  */
-export function isVerified(t: { verificationStatus: string; identityStatus: string }) {
-  return t.verificationStatus === "approved" && t.identityStatus === "verified";
+export function isVerified(t: { identityStatus: string }) {
+  return t.identityStatus === "verified";
 }
 
 /** Monthly VIP perks (extra photos, second location, free boosts) are gated on an active VIP subscription. */

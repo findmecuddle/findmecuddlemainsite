@@ -9,9 +9,9 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } fro
  *
  * Two buckets are used:
  *   - S3_BUCKET: public (ad photos, report evidence) — served straight from S3_PUBLIC_URL_BASE.
- *   - S3_PRIVATE_BUCKET: private (license/ID verification documents) — never public. Fetched
- *     server-side only, and only after an isAdmin() check (see /api/admin/verification-image).
- *     Do NOT enable public access on this bucket.
+ *   - S3_PRIVATE_BUCKET: private (report evidence photos) — never public. Fetched server-side
+ *     only, and only after an isAdmin() check (see /api/admin/report-evidence). Do NOT enable
+ *     public access on this bucket.
  */
 const CONNECTION_VARS = ["S3_ENDPOINT", "S3_REGION", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"] as const;
 

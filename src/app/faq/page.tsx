@@ -21,14 +21,12 @@ const CLIENT_FAQS: { q: string; a: React.ReactNode }[] = [
     q: "Is it safe to book with a cuddler I find here?",
     a: (
       <>
-        Before a listing can go live, we require the cuddler to submit a photo of their cuddle
-        therapy certification (or confirm they don't hold one, since most states don't require
-        certification for this work) and pass an automated government-ID and live-selfie check. A
-        profile showing the blue "✓ Verified" badge has passed both checks. That confirms the
-        documents were reviewed and matched, and that a real government ID was checked against a
-        live selfie. It isn't an ongoing guarantee of a cuddler's conduct, so use your own judgment
-        the same way you would with any independent contractor. {SITE_NAME} is a directory, not the
-        cuddler's employer, and every session is arranged directly between you and the cuddler.
+        Before a listing can go live, we require the cuddler to pass an automated government-ID
+        and live-selfie check. A profile showing the blue "✓ Verified" badge has passed that
+        check, confirming a real government ID was checked against a live selfie. It isn't an
+        ongoing guarantee of a cuddler's conduct, so use your own judgment the same way you would
+        with any independent contractor. {SITE_NAME} is a directory, not the cuddler's employer,
+        and every session is arranged directly between you and the cuddler.
       </>
     ),
   },
@@ -104,14 +102,12 @@ const CUDDLER_FAQS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: "How does certification verification work?",
+    q: "How does identity verification work?",
     a: (
       <>
-        Upload a photo of your cuddle therapy certification (or, if you don't hold one, confirm
-        that instead, most states don't require certification for this work) and complete an
-        automated government-ID and live-selfie check. An admin reviews the certification or
-        attestation, and both that and the ID check need to be approved before your listing goes
-        live and shows the "Verified" badge. This usually takes a day or two.
+        Complete an automated government-ID and live-selfie check through Stripe Identity. Once
+        it's approved, your listing can go live and shows the "Verified" badge. Approval can take
+        up to 24 hours, though it's often faster than that.
       </>
     ),
   },

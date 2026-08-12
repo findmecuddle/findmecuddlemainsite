@@ -227,27 +227,24 @@ export const cuddlers = sqliteTable(
     suspendedAt: integer("suspended_at", { mode: "timestamp_ms" }),
     suspensionNote: text("suspension_note"), // admin-entered reason, shown to the cuddler on their dashboard
 
-    // License verification — an admin manually reviews a photo of the cuddler's cuddle license.
-    // Kept as a manual review because there's no automated way to check a professional license's
-    // authenticity. Document lives in a private, non-public bucket (see uploadPrivateObject in
-    // lib/storage.ts) — this column stores a storage key, never a public URL.
-    verificationStatus: text("verification_status").notNull().default("none"), // none | pending | approved | rejected
-    licenseKey: text("license_key"),
-    // Set when a cuddler submits by attesting their state doesn't require a cuddle therapy
-    // license, instead of uploading a license photo (see /api/verification and
-    // VerificationForm.tsx). Still goes through the same admin approve/reject queue as a normal
-    // submission — an admin independently checks the cuddler's state before approving, this
-    // isn't a self-service bypass. Always false again once a real license photo is uploaded
-    // (the two paths are mutually exclusive — see the POST handler in /api/verification).
-    licenseNotRequired: integer("license_not_required", { mode: "boolean" }).notNull().default(false),
+    // Cuddle certification review — REMOVED as a go-live requirement (cuddle therapy isn't
+    // state-licensed, so this was carryover from findmemassage's real license-verification gate
+    // and never meant anything here). isLive()/isVerified() in lib/stripe.ts no longer read
+    // verificationStatus at all. Columns are kept, frozen, rather than dropped — same
+    // "no SQLite migration needed" call as photosStatus/photosNote in admin/actions.ts. Nothing
+    // writes to these anymore; VerificationForm.tsx, /api/verification, and the admin cert-review
+    // queue were all deleted.
+    verificationStatus: text("verification_status").notNull().default("none"), // frozen, unused
+    licenseKey: text("license_key"), // frozen, unused
+    licenseNotRequired: integer("license_not_required", { mode: "boolean" }).notNull().default(false), // frozen, unused
     idKey: text("id_key"), // legacy: old manual government-ID upload, superseded by Stripe Identity below
-    verificationNote: text("verification_note"), // admin note, e.g. rejection reason
-    verificationSubmittedAt: integer("verification_submitted_at", { mode: "timestamp_ms" }),
-    verifiedAt: integer("verified_at", { mode: "timestamp_ms" }),
+    verificationNote: text("verification_note"), // frozen, unused
+    verificationSubmittedAt: integer("verification_submitted_at", { mode: "timestamp_ms" }), // frozen, unused
+    verifiedAt: integer("verified_at", { mode: "timestamp_ms" }), // frozen, unused
 
     // Identity verification (government ID + live selfie match) — automated via Stripe Identity,
-    // no admin review needed. A listing is only fully verified once both this AND the license
-    // review above are approved (see isLive/isVerified in lib/stripe.ts).
+    // no admin review needed. This is now the only verification gate in isLive()/isVerified()
+    // (see lib/stripe.ts).
     identityStatus: text("identity_status").notNull().default("none"), // none | pending | verified | failed
     identitySessionId: text("identity_session_id"), // Stripe Identity VerificationSession id
     identityVerifiedAt: integer("identity_verified_at", { mode: "timestamp_ms" }),

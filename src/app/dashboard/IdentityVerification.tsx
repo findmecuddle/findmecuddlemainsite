@@ -81,7 +81,7 @@ export default function IdentityVerification({
       </div>
       <p className="mt-1 text-xs text-stone2">
         Required before your listing can go live. A quick automatic check, scan your government-issued ID and
-        take a selfie, usually takes about a minute. This is separate from your certification above.
+        take a selfie, usually takes about a minute.
       </p>
 
       {status === "pending" && (

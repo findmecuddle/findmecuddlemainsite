@@ -6,13 +6,12 @@ import type { ClientSafeCuddler } from "@/lib/auth";
 import type { AgencyEmployee } from "@/lib/schema";
 import { PLAN_BUTTON_LABELS, SUPPORT_EMAIL } from "@/lib/config";
 import { completeSetup, togglePublished, attestListing } from "@/app/actions";
-import VerificationForm from "./VerificationForm";
 import IdentityVerification from "./IdentityVerification";
 import ListingForm from "./ListingForm";
 import TeamManager from "./TeamManager";
 import HoursForm from "./HoursForm";
 
-type SafeCuddler = ClientSafeCuddler & { hasLicenseOnFile: boolean };
+type SafeCuddler = ClientSafeCuddler;
 type HoursProp = React.ComponentProps<typeof HoursForm>["hours"];
 
 type Step = {
@@ -26,8 +25,8 @@ type Step = {
 /**
  * Shown instead of the normal dashboard to any cuddler who hasn't finished setup yet (see the
  * setupCompletedAt gate in dashboard/page.tsx). Deliberately reuses the exact same form components
- * as the regular dashboard (VerificationForm, IdentityVerification, ListingForm, TeamManager,
- * HoursForm) one at a time instead of building new ones — same validation, same server actions,
+ * as the regular dashboard (IdentityVerification, ListingForm, TeamManager, HoursForm) one at a
+ * time instead of building new ones — same validation, same server actions,
  * same "Save" buttons inside each; this file only adds the step navigation around them.
  *
  * "Next" is disabled until the current step is done (see each step's isComplete below) — a
@@ -154,29 +153,17 @@ export default function SetupWizard({
         </form>
       ),
     },
-    // License + identity are submitted together as the last step before Publish (rather than
-    // right after choosing a plan) so a listing only ever shows up in the admin review queue once
-    // everything else — the ad, hours, team for agencies — is already filled in. That way approving
-    // the license and identity check is the one thing standing between "submitted" and "live",
-    // instead of an admin approving a still-mostly-empty listing early and having to circle back.
+    // Identity is submitted as the last step before Publish (rather than right after choosing a
+    // plan) so it's the one thing standing between "submitted" and "live" — Stripe Identity
+    // reviews it automatically, no admin queue involved. (Certification used to be part of this
+    // step too; it's been removed as a go-live requirement, see lib/stripe.ts.)
     {
       id: "verification",
-      title: "Verify Your Certification & Identity",
-      description: "Submit your certification and complete a quick ID check. We review both together.",
-      isComplete:
-        (!!t.verificationSubmittedAt || t.licenseNotRequired) &&
-        (t.identityStatus === "verified" || t.identityStatus === "pending"),
+      title: "Verify Your Identity",
+      description: "Complete a quick ID check with Stripe. This is reviewed automatically.",
+      isComplete: t.identityStatus === "verified" || t.identityStatus === "pending",
       render: () => (
         <div className="grid gap-6">
-          <VerificationForm
-            cuddler={{
-              verificationStatus: t.verificationStatus,
-              verificationNote: t.verificationNote,
-              licenseNotRequired: t.licenseNotRequired,
-              state: t.state,
-              hasLicenseOnFile: t.hasLicenseOnFile,
-            }}
-          />
           <IdentityVerification cuddler={t} />
           <p className="text-xs text-stone2">
             Approval can take up to 24 hours. Try refreshing this page every so often; it often goes through
@@ -259,7 +246,7 @@ export default function SetupWizard({
 }
 
 function PublishStep({ cuddler: t }: { cuddler: SafeCuddler }) {
-  const ready = t.subStatus === "active" && t.verificationStatus === "approved" && t.identityStatus === "verified";
+  const ready = t.subStatus === "active" && t.identityStatus === "verified";
   return (
     <div className="card grid gap-3 p-6">
       <h2 className="font-display text-lg font-semibold">You're Ready</h2>
@@ -277,10 +264,10 @@ function PublishStep({ cuddler: t }: { cuddler: SafeCuddler }) {
         </>
       ) : (
         <p className="text-sm text-stone2">
-          You're all set on your end. We're just finishing up review on your license and/or identity check.
-          Approval can take up to 24 hours; try refreshing this page every so often, it often goes through
-          faster than that. Your ad goes live automatically once approved. Finish setup below to go to your
-          dashboard, where you can track the status and make changes anytime.
+          You're all set on your end. We're just finishing up your identity check. Approval can take up to 24
+          hours; try refreshing this page every so often, it often goes through faster than that. Your ad goes
+          live automatically once approved. Finish setup below to go to your dashboard, where you can track
+          the status and make changes anytime.
         </p>
       )}
       <VerificationFailureNotice cuddler={t} />
@@ -295,22 +282,14 @@ function PublishStep({ cuddler: t }: { cuddler: SafeCuddler }) {
  *  enough), so this points them straight at support instead of leaving them stuck with no next
  *  step. */
 function VerificationFailureNotice({ cuddler: t }: { cuddler: SafeCuddler }) {
-  const licenseRejected = t.verificationStatus === "rejected";
   const identityFailed = t.identityStatus === "failed";
-  if (!licenseRejected && !identityFailed) return null;
+  if (!identityFailed) return null;
 
   return (
     <div className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
-      <p className="font-medium">
-        {licenseRejected && identityFailed
-          ? "Your license and identity check both need another look."
-          : licenseRejected
-          ? "Your license submission needs another look."
-          : "Your identity check didn't go through."}
-      </p>
+      <p className="font-medium">Your identity check didn't go through.</p>
       <p className="mt-1">
-        {licenseRejected && t.verificationNote && `${t.verificationNote} `}
-        You can try resubmitting above. If it still isn't working, contact us at{" "}
+        You can try again above. If it still isn't working, contact us at{" "}
         <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium underline">
           {SUPPORT_EMAIL}
         </a>{" "}

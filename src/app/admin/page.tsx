@@ -12,9 +12,6 @@ import {
   adminDeleteReview,
   actionReport,
   dismissReport,
-  pendingVerifications,
-  approveVerification,
-  rejectVerification,
   pendingWebsiteReviews,
   approveWebsite,
   rejectWebsite,
@@ -38,7 +35,6 @@ export default async function AdminPage() {
   const [
     reviewQueue,
     reportQueue,
-    verificationQueue,
     websiteQueue,
     photoQueue,
     socialQueue,
@@ -47,7 +43,6 @@ export default async function AdminPage() {
   ] = await Promise.all([
     pendingReviews(),
     pendingReports(),
-    pendingVerifications(),
     pendingWebsiteReviews(),
     pendingFlaggedPhotos(),
     pendingSocialPosts(),
@@ -71,80 +66,6 @@ export default async function AdminPage() {
       </div>
 
       <section className="mt-8">
-        <h2 className="font-display text-xl font-semibold">
-          Pending Certification Reviews{" "}
-          {verificationQueue.length > 0 && <span className="text-stone2">({verificationQueue.length})</span>}
-        </h2>
-        <p className="mt-1 text-xs text-stone2">
-          Government ID is checked automatically by Stripe Identity, no admin review needed. This queue is just
-          for the certification photo.
-        </p>
-        {verificationQueue.length === 0 ? (
-          <p className="mt-3 text-sm text-stone2">Nothing waiting.</p>
-        ) : (
-          <ul className="mt-4 grid gap-4">
-            {verificationQueue.map((v) => {
-              const identityCopy =
-                v.identityStatus === "verified"
-                  ? { label: "Identity: Verified", className: "text-spruce" }
-                  : v.identityStatus === "failed"
-                  ? { label: "Identity: Failed", className: "text-red-700" }
-                  : v.identityStatus === "pending"
-                  ? { label: "Identity: Pending", className: "text-gold" }
-                  : { label: "Identity: Not started", className: "text-stone2" };
-              return (
-              <li key={v.id} className="card p-5">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <Link href={`/cuddlers/${v.slug}`} className="font-medium text-spruce hover:underline">
-                    {v.name}
-                  </Link>
-                  <span className="text-xs text-stone2">
-                    {v.verificationSubmittedAt?.toLocaleString() ?? ""}
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-stone2">{v.email}</p>
-                <p className={`mt-1 text-xs font-medium ${identityCopy.className}`}>{identityCopy.label}</p>
-                <div className="mt-3">
-                  <p className="mb-1 text-xs font-medium text-stone2">Certification</p>
-                  {v.licenseNotRequired ? (
-                    <p className="max-w-sm rounded-lg bg-gold/10 p-3 text-xs text-ink/90">
-                      Cuddler states <span className="font-medium">{v.state}</span> does not require
-                      certification for cuddle therapy. Check this before approving: no photo was submitted.
-                    </p>
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={`/api/admin/verification-image?cuddlerId=${v.id}`}
-                      alt="Certification"
-                      className="h-40 w-40 rounded-lg border border-line object-cover"
-                    />
-                  )}
-                </div>
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <form action={approveVerification}>
-                    <input type="hidden" name="id" value={v.id} />
-                    <input type="hidden" name="slug" value={v.slug} />
-                    <button className="btn-primary">Approve</button>
-                  </form>
-                  <form action={rejectVerification} className="flex flex-1 items-center gap-2">
-                    <input type="hidden" name="id" value={v.id} />
-                    <input
-                      type="text"
-                      name="note"
-                      placeholder="Rejection reason (shown to cuddler)"
-                      className="field flex-1 text-sm"
-                    />
-                    <button className="btn-ghost">Reject</button>
-                  </form>
-                </div>
-              </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      <section className="mt-10">
         <h2 className="font-display text-xl font-semibold">
           Flagged Photos{" "}
           {photoQueue.length > 0 && <span className="text-stone2">({photoQueue.length})</span>}
