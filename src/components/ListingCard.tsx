@@ -113,6 +113,7 @@ export default function ListingCard({
           <p className="mt-1 truncate font-display text-[15px] italic text-ink/80">&ldquo;{t.headline}&rdquo;</p>
         )}
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-stone2">
+          {t.hosts && <span className="rounded-full border border-line bg-porcelain px-2.5 py-0.5">Hosts</span>}
           {t.mobile && <span className="rounded-full border border-line bg-porcelain px-2.5 py-0.5">Mobile</span>}
           {rateLabel && (
             <span className="ml-auto rounded-full bg-spruce-tint px-3 py-1.5 text-sm font-bold text-spruce">

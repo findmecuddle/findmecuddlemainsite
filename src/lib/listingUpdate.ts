@@ -48,6 +48,15 @@ export async function applyListingUpdate(
   const offersVirtual = formData.get("offersVirtual") === "on";
   const virtualHourlyRate = offersVirtual ? parseRate("virtualHourlyRate") : null;
 
+  // Where in-person sessions happen — at least one of Host / Mobile must be selected, same
+  // "can't submit a listing with nowhere to actually meet" reasoning as the contact-method check
+  // below. (offersVirtual is separate and doesn't count toward this.)
+  const hosts = formData.get("hosts") === "on";
+  const mobile = formData.get("mobile") === "on";
+  if (!hosts && !mobile) {
+    return { error: "Select at least one: I Can Host or I Am Mobile." };
+  }
+
   // "Getting to know you" — every field optional free text, or one of a short pick-list (only the
   // exact listed value is accepted, same tamper-proofing pattern as gender below). See the matching
   // columns' comments in lib/schema.ts.
@@ -57,6 +66,7 @@ export async function applyListingUpdate(
     return options.includes(raw) ? raw : null;
   };
   const favoriteFood = text("favoriteFood");
+  const favoriteDessert = text("favoriteDessert");
   const favoriteAnimal = text("favoriteAnimal");
   const enjoysPets = pick("enjoysPets", ENJOYS_PETS_OPTIONS);
   const allergies = text("allergies");
@@ -65,6 +75,7 @@ export async function applyListingUpdate(
   const favoriteMovie = text("favoriteMovie");
   const favoriteShow = text("favoriteShow");
   const enjoysAboutCuddling = text("enjoysAboutCuddling", 500);
+  const nextVacationDestination = text("nextVacationDestination");
   // No longer collected via the form (dropped per product decision) — carry forward whatever's
   // already stored instead of wiping it on every save. Column stays in schema.ts either way.
   const activeLifestyle = existing.activeLifestyle;
@@ -132,6 +143,7 @@ export async function applyListingUpdate(
       offersVirtual,
       virtualHourlyRate,
       favoriteFood,
+      favoriteDessert,
       favoriteAnimal,
       enjoysPets,
       allergies,
@@ -140,12 +152,14 @@ export async function applyListingUpdate(
       favoriteMovie,
       favoriteShow,
       enjoysAboutCuddling,
+      nextVacationDestination,
       activeLifestyle,
       height,
       bodyType,
       hairColor,
       eyeColor,
-      mobile: formData.get("mobile") === "on",
+      hosts,
+      mobile,
       socialMediaOptIn: formData.get("socialMediaOptIn") === "on",
       websiteUrl,
       websiteStatus,

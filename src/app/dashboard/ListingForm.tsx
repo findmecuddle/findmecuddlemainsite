@@ -177,10 +177,17 @@ export default function ListingForm({
       </div>
 
       <div className="border-t border-line pt-4">
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="mobile" defaultChecked={t.mobile} className="h-4 w-4 accent-spruce" />
-          {agencyAccount ? "Mobile Session (We Travel To The Client)" : "Mobile Session (I Travel To The Client)"}
-        </label>
+        <label className="label">Where You See Clients</label>
+        <div className="mt-1 grid gap-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="hosts" defaultChecked={t.hosts} className="h-4 w-4 accent-spruce" />
+            {agencyAccount ? "We Can Host (Client Comes To Us)" : "I Can Host (Client Comes To Me)"}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="mobile" defaultChecked={t.mobile} className="h-4 w-4 accent-spruce" />
+            {agencyAccount ? "I Am Mobile (We Travel To The Client)" : "I Am Mobile (I Travel To The Client)"}
+          </label>
+        </div>
       </div>
 
       {!agencyAccount && (
@@ -271,6 +278,10 @@ export default function ListingForm({
               <input id="favoriteFood" name="favoriteFood" defaultValue={t.favoriteFood ?? ""} className="field" />
             </div>
             <div>
+              <label className="label" htmlFor="favoriteDessert">Favorite Dessert</label>
+              <input id="favoriteDessert" name="favoriteDessert" defaultValue={t.favoriteDessert ?? ""} className="field" />
+            </div>
+            <div>
               <label className="label" htmlFor="favoriteAnimal">Favorite Animal</label>
               <input id="favoriteAnimal" name="favoriteAnimal" defaultValue={t.favoriteAnimal ?? ""} className="field" />
             </div>
@@ -339,6 +350,10 @@ export default function ListingForm({
             <div>
               <label className="label" htmlFor="enjoysAboutCuddling">What Do You Enjoy About Cuddling?</label>
               <textarea id="enjoysAboutCuddling" name="enjoysAboutCuddling" defaultValue={t.enjoysAboutCuddling ?? ""} rows={3} className="field" maxLength={500} />
+            </div>
+            <div>
+              <label className="label" htmlFor="nextVacationDestination">Next Vacation Destination</label>
+              <input id="nextVacationDestination" name="nextVacationDestination" defaultValue={t.nextVacationDestination ?? ""} className="field" />
             </div>
           </div>
         </div>

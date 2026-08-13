@@ -144,6 +144,10 @@ export const cuddlers = sqliteTable(
     // "Contact Me" for virtual sessions specifically, independent of the in-person rate above.
     offersVirtual: integer("offers_virtual", { mode: "boolean" }).notNull().default(false),
     virtualHourlyRate: integer("virtual_hourly_rate"),
+    // Where in-person sessions happen — independent checkboxes, a cuddler can offer either or
+    // both. `hosts` defaults true because every existing listing already showed an in-person rate
+    // and implicitly hosted before this field existed; `mobile` keeps its old default (false).
+    hosts: integer("hosts", { mode: "boolean" }).notNull().default(true),
     mobile: integer("mobile", { mode: "boolean" }).notNull().default(false),
 
     // --- "Getting to know you" — a personality/lifestyle profile shown on the public listing so
@@ -152,6 +156,7 @@ export const cuddlers = sqliteTable(
     // on the public page when filled in — see the "Getting To Know Me" section in
     // cuddlers/[slug]/page.tsx and the corresponding form section in dashboard/ListingForm.tsx.
     favoriteFood: text("favorite_food"),
+    favoriteDessert: text("favorite_dessert"),
     favoriteAnimal: text("favorite_animal"),
     enjoysPets: text("enjoys_pets"), // "Yes" | "No" | "It Depends" | null — see ENJOYS_PETS_OPTIONS in lib/config.ts
     allergies: text("allergies"),
@@ -160,6 +165,7 @@ export const cuddlers = sqliteTable(
     favoriteMovie: text("favorite_movie"),
     favoriteShow: text("favorite_show"),
     enjoysAboutCuddling: text("enjoys_about_cuddling"), // "what they enjoy about cuddling"
+    nextVacationDestination: text("next_vacation_destination"),
     activeLifestyle: text("active_lifestyle"), // see ACTIVE_LIFESTYLE_OPTIONS in lib/config.ts
     height: text("height"), // free text, e.g. 5'8" — formats vary too much for a clean dropdown
     bodyType: text("body_type"), // see BODY_TYPE_OPTIONS in lib/config.ts

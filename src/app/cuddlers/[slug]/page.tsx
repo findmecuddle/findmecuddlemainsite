@@ -79,6 +79,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
   // cuddler actually filled in (see the matching columns' comments in lib/schema.ts).
   const gettingToKnowYou: { label: string; value: string }[] = [
     { label: "Favorite Food", value: t.favoriteFood ?? "" },
+    { label: "Favorite Dessert", value: t.favoriteDessert ?? "" },
     { label: "Favorite Animal", value: t.favoriteAnimal ?? "" },
     { label: "Enjoys Pets", value: t.enjoysPets ?? "" },
     { label: "Allergies", value: t.allergies ?? "" },
@@ -86,6 +87,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
     { label: "Favorite Things To Do", value: t.favoriteActivities ?? "" },
     { label: "Favorite Movie", value: t.favoriteMovie ?? "" },
     { label: "Favorite TV Show", value: t.favoriteShow ?? "" },
+    { label: "Next Vacation Destination", value: t.nextVacationDestination ?? "" },
     { label: "Height", value: t.height ?? "" },
     { label: "Body Type", value: t.bodyType ?? "" },
     { label: "Hair Color", value: t.hairColor ?? "" },
@@ -245,7 +247,14 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
                   {t.city}, {t.state}
                 </Link>
                 {t.gender && ` · ${t.gender === "female" ? "Female" : "Male"}`}
-                {t.mobile ? " · Mobile sessions available" : ""} ·{" "}
+                {t.hosts && t.mobile
+                  ? " · Hosts & Mobile Sessions Available"
+                  : t.hosts
+                  ? " · Hosts At Their Place"
+                  : t.mobile
+                  ? " · Mobile Sessions Available"
+                  : ""}{" "}
+                ·{" "}
                 <em className="font-display font-normal italic text-stone2">Joined {joined}</em>
               </p>
               {boosted && t.boostMessage && (
