@@ -334,7 +334,7 @@ function QuickReport({
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="ml-auto text-xs text-stone2 hover:underline">
-        {alreadyFlagged ? "Also Report This Contact" : "Report This Customer"}
+        {alreadyFlagged ? "Also Report This Contact" : "Report This Client"}
       </button>
     );
   }
@@ -371,7 +371,7 @@ function ReportCustomer() {
     <div className="mt-5 border-t border-line pt-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-ink">Report A Customer</h3>
+          <h3 className="text-sm font-semibold text-ink">Report A Client</h3>
           <p className="mt-0.5 text-xs text-stone2">
             Had a bad experience with someone who didn't message you through the site? Flag their number or
             email to warn other cuddlers if that contact reaches out to them too.
