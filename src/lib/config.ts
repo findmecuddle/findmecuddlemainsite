@@ -25,7 +25,7 @@ export const CONTACT_BODY_MAX_CHARS = 2000;
 export const WEBSITE_URL_MAX_CHARS = 200;
 
 // --- Social profile links (not admin-reviewed, see schema.ts comment on socialLinks) ---
-export const SOCIAL_PLATFORMS: string[] = ["Instagram", "TikTok", "X"];
+export const SOCIAL_PLATFORMS: string[] = ["Instagram", "TikTok", "X", "Other"];
 export const SOCIAL_LINKS_MAX = 3;
 export const SOCIAL_URL_MAX_CHARS = 200;
 

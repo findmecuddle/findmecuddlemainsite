@@ -50,24 +50,24 @@ export default function HoursForm({
   );
 
   return (
-    <form action={action} className="card grid gap-4 p-6">
+    <form action={action} className="card grid gap-3 p-5">
       <h2 className="font-display text-lg font-semibold">Hours</h2>
       <p className="text-sm text-stone2">
         Set the hours you're available each day. Leave a day blank to mark it closed. For a day
         you're available around the clock, just set it 12:00 AM to 11:30 PM.
       </p>
 
-      <div className="grid gap-4">
+      <div className="grid gap-2.5">
         {hours.map(({ day, label, blocks }) => {
           const block = blocks.find((b) => b.blockIndex === 0);
           const open = splitTime(block?.openTime ?? null);
           const close = splitTime(block?.closeTime ?? null);
           return (
-            <div key={day} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
-              <span className="text-sm font-medium">{label}</span>
-              <div className="mt-1.5 grid grid-cols-[1fr,auto,1fr] items-center gap-2">
+            <div key={day} className="border-t border-line pt-2.5 first:border-t-0 first:pt-0">
+              <span className="text-xs font-medium">{label}</span>
+              <div className="mt-1 grid grid-cols-[1fr,auto,1fr] items-center gap-1.5">
                 <TimeSelect name={`day_${day}_block0_open`} label={`${label} opens`} value={open} />
-                <span className="text-center text-xs text-stone2">to</span>
+                <span className="text-center text-[11px] text-stone2">to</span>
                 <TimeSelect name={`day_${day}_block0_close`} label={`${label} closes`} value={close} />
               </div>
             </div>
@@ -111,19 +111,24 @@ function TimeSelect({
   label: string;
   value: { hour: string; minute: "00" | "30"; ampm: "AM" | "PM" };
 }) {
+  // Deliberately not the shared .field class here — that's sized for full-width text inputs
+  // (px-4 py-2.5 text-sm); these three selects sit side by side and only ever hold 1-4 characters,
+  // so a smaller, compact style keeps a day's row from towering over everything else in Hours.
+  const compact =
+    "rounded-lg border border-line bg-white px-1.5 py-1.5 text-xs text-ink focus:border-spruce focus:outline-none focus:ring-2 focus:ring-spruce/15";
   return (
     <div className="flex gap-1">
-      <select name={`${name}_hour`} defaultValue={value.hour} className="field" aria-label={`${label} hour`}>
+      <select name={`${name}_hour`} defaultValue={value.hour} className={`${compact} w-12`} aria-label={`${label} hour`}>
         <option value="">--</option>
         {HOURS_12.map((h) => (
           <option key={h} value={h}>{h}</option>
         ))}
       </select>
-      <select name={`${name}_min`} defaultValue={value.minute} className="field" aria-label={`${label} minute`}>
+      <select name={`${name}_min`} defaultValue={value.minute} className={`${compact} w-14`} aria-label={`${label} minute`}>
         <option value="00">:00</option>
         <option value="30">:30</option>
       </select>
-      <select name={`${name}_ampm`} defaultValue={value.ampm} className="field" aria-label={`${label} AM/PM`}>
+      <select name={`${name}_ampm`} defaultValue={value.ampm} className={`${compact} w-14`} aria-label={`${label} AM/PM`}>
         <option value="AM">AM</option>
         <option value="PM">PM</option>
       </select>

@@ -76,6 +76,7 @@ export async function applyListingUpdate(
   const favoriteShow = text("favoriteShow");
   const enjoysAboutCuddling = text("enjoysAboutCuddling", 500);
   const nextVacationDestination = text("nextVacationDestination");
+  const funFact = text("funFact", 300);
   // No longer collected via the form (dropped per product decision) — carry forward whatever's
   // already stored instead of wiping it on every save. Column stays in schema.ts either way.
   const activeLifestyle = existing.activeLifestyle;
@@ -153,6 +154,7 @@ export async function applyListingUpdate(
       favoriteShow,
       enjoysAboutCuddling,
       nextVacationDestination,
+      funFact,
       activeLifestyle,
       height,
       bodyType,

@@ -286,7 +286,7 @@ export default function ListingForm({
               <input id="favoriteAnimal" name="favoriteAnimal" defaultValue={t.favoriteAnimal ?? ""} className="field" />
             </div>
             <div>
-              <label className="label" htmlFor="enjoysPets">Do You Enjoy Pets?</label>
+              <label className="label" htmlFor="enjoysPets">Do You Have Pets?</label>
               <select id="enjoysPets" name="enjoysPets" defaultValue={t.enjoysPets ?? ""} className="field">
                 <option value="">Prefer not to say</option>
                 {ENJOYS_PETS_OPTIONS.map((o) => (
@@ -355,6 +355,10 @@ export default function ListingForm({
               <label className="label" htmlFor="nextVacationDestination">Next Vacation Destination</label>
               <input id="nextVacationDestination" name="nextVacationDestination" defaultValue={t.nextVacationDestination ?? ""} className="field" />
             </div>
+            <div>
+              <label className="label" htmlFor="funFact">Fun Fact About Me</label>
+              <input id="funFact" name="funFact" defaultValue={t.funFact ?? ""} className="field" maxLength={300} />
+            </div>
           </div>
         </div>
       )}
@@ -362,7 +366,7 @@ export default function ListingForm({
       <div className="border-t border-line pt-4">
         <label className="label">Social Links (Optional, Up To {SOCIAL_LINKS_MAX})</label>
         <p className="mt-1 text-xs text-stone2">
-          Add your Instagram, TikTok, or X profile. These go live right away, no review needed.
+          Add your Instagram, TikTok, X, or other profile link. These go live right away, no review needed.
         </p>
         <div className="mt-2 grid gap-2">
           {socialLinkRows.map((row, i) => (

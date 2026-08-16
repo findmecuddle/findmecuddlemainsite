@@ -166,6 +166,7 @@ export const cuddlers = sqliteTable(
     favoriteShow: text("favorite_show"),
     enjoysAboutCuddling: text("enjoys_about_cuddling"), // "what they enjoy about cuddling"
     nextVacationDestination: text("next_vacation_destination"),
+    funFact: text("fun_fact"),
     activeLifestyle: text("active_lifestyle"), // see ACTIVE_LIFESTYLE_OPTIONS in lib/config.ts
     height: text("height"), // free text, e.g. 5'8" — formats vary too much for a clean dropdown
     bodyType: text("body_type"), // see BODY_TYPE_OPTIONS in lib/config.ts

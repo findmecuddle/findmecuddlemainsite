@@ -1,7 +1,7 @@
 // Up to SOCIAL_LINKS_MAX social profile links per cuddler/agency, stored as one JSON blob
 // (cuddlers.socialLinks) rather than numbered slot columns — same "always read/written as a
 // whole unit" reasoning as employeeHours.ts. Not admin-reviewed (unlike websiteUrl): Instagram,
-// TikTok, and X are a narrower, known set of platforms, so these go live immediately.
+// TikTok, X, and Other are a narrower, known set of platforms, so these go live immediately.
 
 import { SOCIAL_PLATFORMS, SOCIAL_LINKS_MAX, SOCIAL_URL_MAX_CHARS } from "./config";
 
