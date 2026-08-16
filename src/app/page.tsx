@@ -89,7 +89,7 @@ export default async function HomePage() {
         className="border-b border-line bg-cover bg-center"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(247,245,240,0.88), rgba(247,245,240,0.88)), url(/hero-bg.jpg)",
+            "linear-gradient(rgba(247,245,240,0.35), rgba(247,245,240,0.35)), url(/hero-pattern.jpg)",
         }}
       >
         <div className="container-page py-16 sm:py-24">
