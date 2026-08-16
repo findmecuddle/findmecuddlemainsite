@@ -60,6 +60,7 @@ export default async function AdminPage() {
         <div className="flex items-center gap-2">
           <Link href="/admin/cuddlers" className="btn-ghost">Manage Cuddlers</Link>
           <Link href="/admin/activity" className="btn-ghost">Activity Log</Link>
+          <Link href="/admin/subscribers" className="btn-ghost">Subscribers</Link>
           {admin.role === "super" && <Link href="/admin/team" className="btn-ghost">Team</Link>}
           <form action={adminLogout}><button className="btn-ghost">Log Out</button></form>
         </div>

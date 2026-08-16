@@ -14,6 +14,7 @@ import {
   flaggedContacts,
   flaggedPhotos,
   agencyEmployees,
+  newsletterSubscribers,
   type Admin,
 } from "@/lib/schema";
 import { deleteObject, keyFromPublicUrl } from "@/lib/storage";
@@ -850,4 +851,11 @@ export async function recentActivity(limit = 100) {
 export async function recentSystemEvents(limit = 100) {
   await requireAdmin();
   return db.select().from(systemEvents).orderBy(desc(systemEvents.createdAt)).limit(limit);
+}
+
+// ---------- Newsletter subscribers ----------
+
+export async function allNewsletterSubscribers() {
+  await requireAdmin();
+  return db.select().from(newsletterSubscribers).orderBy(desc(newsletterSubscribers.consentAt));
 }
