@@ -16,7 +16,7 @@ declare global {
 const STATUS_COPY: Record<string, { label: string; className: string }> = {
   none: { label: "Not started", className: "text-stone2" },
   pending: { label: "Pending review", className: "text-gold" },
-  verified: { label: "Verified", className: "text-spruce" },
+  verified: { label: "Verified", className: "text-emerald-700" },
   failed: { label: "Couldn't verify, try again", className: "text-red-700" },
 };
 
