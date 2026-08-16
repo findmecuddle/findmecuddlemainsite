@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Script from "next/script";
 import type { ClientSafeCuddler } from "@/lib/auth";
 
@@ -24,10 +25,30 @@ export default function IdentityVerification({
 }: {
   cuddler: Pick<ClientSafeCuddler, "identityStatus">;
 }) {
+  const router = useRouter();
   const [status, setStatus] = useState(cuddler.identityStatus);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+
+  // Keeps local status in sync whenever the server-fetched cuddler prop changes (see the
+  // router.refresh() calls below) — useState's initial value only applies on mount, so without
+  // this a refresh() wouldn't actually update what's shown here or let SetupWizard's step-complete
+  // check (which reads the prop straight from the DB, not this component's own state) see it.
+  useEffect(() => {
+    setStatus(cuddler.identityStatus);
+  }, [cuddler.identityStatus]);
+
+  // Stripe reviews the submission asynchronously (webhook updates identityStatus — see
+  // identity.verification_session.verified/.requires_input/.canceled in api/stripe/webhook). While
+  // this card is showing "pending", poll every 5s so the page picks up "verified"/"failed" on its
+  // own instead of requiring a manual reload, same "no page requires a manual refresh to see truth"
+  // goal as the countdown-driven re-renders in BoostButton/OpenNowButton.
+  useEffect(() => {
+    if (status !== "pending") return;
+    const id = setInterval(() => router.refresh(), 5000);
+    return () => clearInterval(id);
+  }, [status, router]);
 
   const badge = STATUS_COPY[status] ?? STATUS_COPY.none;
 
@@ -51,6 +72,11 @@ export default function IdentityVerification({
         setError(result.error.message || "Verification was cancelled or failed.");
       } else {
         setStatus("pending");
+        // Re-fetches the server-rendered cuddler data now that create-session (called above)
+        // already flipped identityStatus to "pending" in the DB — otherwise SetupWizard's
+        // step-complete check, which reads that prop directly rather than this component's local
+        // state, wouldn't know until an unrelated navigation happened to trigger it.
+        router.refresh();
       }
     } catch {
       setError("Something went wrong. Check your connection and try again.");
@@ -86,8 +112,8 @@ export default function IdentityVerification({
 
       {status === "pending" && (
         <p className="mt-3 rounded-lg bg-porcelain p-3 text-xs text-stone2">
-          Submitted. Stripe is reviewing it now, this usually finishes within a few minutes. Refresh this page to
-          check your status.
+          Submitted. Stripe is reviewing it now, this usually finishes within a few minutes. This page checks
+          automatically, no need to refresh.
         </p>
       )}
 

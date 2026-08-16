@@ -30,7 +30,7 @@ export default function OpenNowButton({
     <div className="mt-3">
       <form action={activateOpenNow}>
         <button className="btn-primary w-full disabled:opacity-50" disabled={!live || active}>
-          {active ? "Open Now Active" : "I'm Open Now"}
+          {active ? "Open Now Active" : "Available Now"}
         </button>
       </form>
       {!live && <p className="mt-2 text-xs text-stone2">Go live first. This only works on active listings.</p>}

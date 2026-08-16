@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { ClientSafeCuddler } from "@/lib/auth";
 import type { AgencyEmployee } from "@/lib/schema";
@@ -63,6 +64,18 @@ export default function SetupWizard({
   // flipped the Ad step's isComplete back to false and sent the wizard all the way back to step 0.
   const [attestConfirmed, setAttestConfirmed] = useState(!!t.listingAttestedAt);
   const [, startAttestTransition] = useTransition();
+
+  // IdentityVerification.tsx polls on its own while it's mounted, but it's only rendered on the
+  // "verification" step — once identityStatus is "pending", isComplete already lets someone move
+  // on to "publish" without waiting, and PublishStep's `ready` check needs the same live updates
+  // too (it reads t.identityStatus straight from this same prop). Polling once here, at the wizard
+  // root, covers every step instead of duplicating this per step.
+  const router = useRouter();
+  useEffect(() => {
+    if (t.identityStatus !== "pending") return;
+    const id = setInterval(() => router.refresh(), 5000);
+    return () => clearInterval(id);
+  }, [t.identityStatus, router]);
 
   function confirmAttestation(checked: boolean) {
     setAttestConfirmed(checked);
@@ -166,8 +179,8 @@ export default function SetupWizard({
         <div className="grid gap-6">
           <IdentityVerification cuddler={t} />
           <p className="text-xs text-stone2">
-            Approval can take up to 24 hours. Try refreshing this page every so often; it often goes through
-            faster than that.
+            Approval can take up to 24 hours, though it's often faster than that — this page checks
+            automatically, no need to refresh.
           </p>
           <VerificationFailureNotice cuddler={t} />
         </div>
@@ -265,9 +278,9 @@ function PublishStep({ cuddler: t }: { cuddler: SafeCuddler }) {
       ) : (
         <p className="text-sm text-stone2">
           You're all set on your end. We're just finishing up your identity check. Approval can take up to 24
-          hours; try refreshing this page every so often, it often goes through faster than that. Your ad goes
-          live automatically once approved. Finish setup below to go to your dashboard, where you can track
-          the status and make changes anytime.
+          hours, though it's often faster than that — this page checks automatically, no need to refresh. Your
+          ad goes live automatically once approved. Finish setup below to go to your dashboard, where you can
+          track the status and make changes anytime.
         </p>
       )}
       <VerificationFailureNotice cuddler={t} />
