@@ -17,6 +17,7 @@ import { toClientSafeCuddler } from "@/lib/auth";
 import { isLive, isPaused, isSuspended } from "@/lib/stripe";
 import ListingForm from "@/app/dashboard/ListingForm";
 import HoursForm from "@/app/dashboard/HoursForm";
+import AdminDeleteAccountForm from "./AdminDeleteAccountForm";
 
 export const dynamic = "force-dynamic";
 
@@ -169,6 +170,7 @@ export default async function AdminEditCuddlerPage(props: { params: Promise<{ id
           undoCropAction={undoCardCrop}
         />
         <HoursForm hours={hours} gatekeepHours={t.gatekeepHours} action={adminUpdateHours.bind(null, id)} />
+        <AdminDeleteAccountForm id={id} name={t.name} />
       </div>
     </div>
   );

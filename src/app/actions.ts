@@ -23,7 +23,8 @@ import {
   FLAG_RED_AT,
 } from "@/lib/config";
 import { stripe } from "@/lib/stripe";
-import { deleteObject, deletePrivateObject, keyFromPublicUrl } from "@/lib/storage";
+import { deleteObject, keyFromPublicUrl } from "@/lib/storage";
+import { deleteCuddlerAccount } from "@/lib/deleteAccount";
 
 // ---------- Auth ----------
 // Login/signup credentials, sessions, and password reset are all handled by Clerk now (see
@@ -139,12 +140,9 @@ export async function changePassword(
 
 // ---------- Delete account ----------
 
-const PHOTO_URL_COLUMNS = ["photoUrl", "photoUrl2", "photoUrl3", "photoUrl4", "photoUrl5", "photoUrl6"] as const;
-
-// Fulfills the CCPA deletion right already promised in /privacy. Cancels billing immediately so
-// nothing keeps charging after the account is gone, best-effort cleans up storage (photos +
-// private license document), then deletes the cuddler row — reviews, reports, hours, and
-// credit events all cascade-delete automatically via the foreign keys in schema.ts.
+// Fulfills the CCPA deletion right already promised in /privacy. See deleteCuddlerAccount() in
+// lib/deleteAccount.ts for what actually gets cleaned up (billing, storage, Clerk login, DB row) —
+// shared with the admin-side "Delete This Account" action in admin/actions.ts.
 export async function deleteAccount(
   _prev: unknown,
   formData: FormData
@@ -168,28 +166,7 @@ export async function deleteAccount(
     return { error: 'Type "DELETE" to confirm.' };
   }
 
-  if (me.stripeSubscriptionId) {
-    try {
-      await stripe().subscriptions.cancel(me.stripeSubscriptionId);
-    } catch {
-      // Already canceled, or Stripe is unreachable — don't block account deletion on this;
-      // worst case is one extra billing cycle, which support can refund on request.
-    }
-  }
-
-  for (const col of PHOTO_URL_COLUMNS) {
-    const url = (me as unknown as Record<string, string | null>)[col];
-    const key = url ? keyFromPublicUrl(url) : null;
-    if (key) deleteObject(key).catch(() => {});
-  }
-  if (me.licenseKey) deletePrivateObject(me.licenseKey).catch(() => {});
-  if (me.idKey) deletePrivateObject(me.idKey).catch(() => {});
-
-  await db.delete(cuddlers).where(eq(cuddlers.id, me.id));
-  // Delete the Clerk login too — otherwise the account would still exist and be able to sign in
-  // even though its listing/data is gone. Best-effort: DB deletion above is the part that matters
-  // most for CCPA, so don't fail the whole request if Clerk is briefly unreachable.
-  await clerk.users.deleteUser(me.clerkUserId).catch(() => {});
+  await deleteCuddlerAccount(me);
   redirect("/account-deleted");
 }
 

@@ -188,6 +188,23 @@ export async function applyListingUpdate(
   return { ok: "Listing saved." };
 }
 
+// HoursForm.tsx submits each open/close time as three separate selects (`${key}_hour` 1-12,
+// `${key}_min` "00"|"30", `${key}_ampm` "AM"|"PM") rather than a single field — combines them into
+// the "HH:MM" 24-hour string the cuddlerHours table has always stored (same format the old native
+// <input type="time"> used to submit directly). An empty/missing hour means this time isn't set.
+function readTime(formData: FormData, key: string): string {
+  const hour = String(formData.get(`${key}_hour`) || "").trim();
+  if (!hour) return "";
+  const min = String(formData.get(`${key}_min`) || "00").trim();
+  const ampm = String(formData.get(`${key}_ampm`) || "AM").trim().toUpperCase();
+  let h = parseInt(hour, 10);
+  if (!Number.isFinite(h) || h < 1 || h > 12) return "";
+  if (ampm === "PM" && h !== 12) h += 12;
+  if (ampm === "AM" && h === 12) h = 0;
+  const minute = min === "30" ? "30" : "00";
+  return `${String(h).padStart(2, "0")}:${minute}`;
+}
+
 export async function applyHoursUpdate(
   id: string,
   slug: string,
@@ -198,8 +215,8 @@ export async function applyHoursUpdate(
   const rows: { cuddlerId: string; dayOfWeek: number; blockIndex: number; closed: false; openTime: string; closeTime: string }[] = [];
   for (const { day } of WEEK_DAYS) {
     for (let blockIndex = 0; blockIndex < HOUR_BLOCKS_PER_DAY; blockIndex++) {
-      const open = String(formData.get(`day_${day}_block${blockIndex}_open`) || "").trim();
-      const close = String(formData.get(`day_${day}_block${blockIndex}_close`) || "").trim();
+      const open = readTime(formData, `day_${day}_block${blockIndex}_open`);
+      const close = readTime(formData, `day_${day}_block${blockIndex}_close`);
       if (open && close) {
         rows.push({ cuddlerId: id, dayOfWeek: day, blockIndex, closed: false, openTime: open, closeTime: close });
       }

@@ -29,6 +29,7 @@ import { rateLimit } from "@/lib/rateLimit";
 import { isLive, isPaused, isSuspended, isVerified, photosApproved } from "@/lib/stripe";
 import { checkGoLive } from "@/lib/activity";
 import { applyListingUpdate, applyHoursUpdate } from "@/lib/listingUpdate";
+import { deleteCuddlerAccount } from "@/lib/deleteAccount";
 import { buildSocialCaption } from "@/lib/socialCaption";
 import { SITE_URL, SOCIAL_QUEUE_LIMIT } from "@/lib/config";
 
@@ -664,6 +665,33 @@ export async function adminGetCuddler(id: string) {
   await requireAdmin();
   const [t] = await db.select().from(cuddlers).where(eq(cuddlers.id, id)).limit(1);
   return t ?? null;
+}
+
+// Lets an admin remove an account directly — e.g. a cuddler emails support asking to be deleted
+// rather than using the self-service "Delete My Account" on their own dashboard (see deleteAccount()
+// in app/actions.ts). Same cleanup either way (billing, storage, Clerk login, DB row): see
+// deleteCuddlerAccount() in lib/deleteAccount.ts. No password check (admin auth already gates this),
+// but still requires typing DELETE, and it's logged to the audit trail with whatever reason the
+// admin gave, same as suspendCuddler() above.
+export async function adminDeleteCuddler(
+  _prev: unknown,
+  formData: FormData
+): Promise<{ error?: string } | void> {
+  const admin = await requireAdmin();
+  const id = String(formData.get("id") || "");
+  if (!id) return { error: "Missing cuddler id." };
+  if (formData.get("confirmText") !== "DELETE") {
+    return { error: 'Type "DELETE" to confirm.' };
+  }
+
+  const [t] = await db.select().from(cuddlers).where(eq(cuddlers.id, id)).limit(1);
+  if (!t) return { error: "Cuddler not found." };
+
+  const reason = String(formData.get("reason") || "").trim();
+  await deleteCuddlerAccount(t);
+  await logAction(admin, "admin_delete_cuddler", { targetType: "cuddler", targetId: id, detail: reason || t.email });
+  revalidatePath("/admin/cuddlers");
+  redirect("/admin/cuddlers");
 }
 
 export async function adminUpdateListing(cuddlerId: string, _prev: unknown, formData: FormData) {
