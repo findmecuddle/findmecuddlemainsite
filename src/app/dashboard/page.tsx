@@ -4,11 +4,9 @@ import { SignOutButton } from "@clerk/nextjs";
 import { currentCuddler, currentClerkUserId, toClientSafeCuddler } from "@/lib/auth";
 import { recentLedger, getHours, listEmployees, listInquiries, listMyReports } from "@/app/actions";
 import {
-  creditPacks,
   PLANS,
   AGENCY_PLAN_KEYS,
   PLAN_BUTTON_LABELS,
-  BOOST_COOLDOWN_HOURS,
   VACATION_PAUSE_DAYS,
   MANUAL_OPEN_NOW_HOURS,
 } from "@/lib/config";
@@ -16,7 +14,6 @@ import { isLive, isVip, isPaused, isSuspended, isAgencyAccount, agencyEmployeeLi
 import { pauseListing, resumeListing, togglePublished } from "@/app/actions";
 import ListingForm from "./ListingForm";
 import HoursForm from "./HoursForm";
-import BoostButton from "./BoostButton";
 import CountdownClock from "./CountdownClock";
 import IdentityVerification from "./IdentityVerification";
 import ChangePasswordForm from "./ChangePasswordForm";
@@ -63,7 +60,6 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
   const suspended = isSuspended(me);
   const paused = isPaused(me);
   const pauseResumesAt = me.pausedAt ? new Date(me.pausedAt.getTime() + VACATION_PAUSE_DAYS * 86_400_000) : null;
-  const packs = creditPacks();
   const recent = await recentLedger(me.id);
   const hours = await getHours(me.id);
   const agency = isAgencyAccount(me);
@@ -315,32 +311,14 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
           </section>
 
           <section className="card border-l-[3px] border-l-gold p-6">
-            <h2 className="font-display text-lg font-semibold">Boosts</h2>
-            <p className="mt-1 text-xs text-stone2">
-              Boosts push your ad to the top of the search list for {BOOST_COOLDOWN_HOURS} Hours.
-            </p>
-            <p className="mt-2 text-sm">
-              <span className="font-display text-3xl font-semibold">{me.credits}</span>{" "}
-              <span className="text-stone2">credit{me.credits === 1 ? "" : "s"} available</span>
-            </p>
-            <BoostButton
-              credits={me.credits}
-              boostedAt={me.boostedAt?.toISOString() ?? null}
-              boostMessage={me.boostMessage}
-              live={live}
-            />
-            <div className="mt-4 grid gap-2 border-t border-line pt-4">
-              {packs.length === 0 && (
-                <p className="text-xs text-stone2">Credit packs aren’t configured yet (STRIPE_CREDIT_PACKS).</p>
-              )}
-              {packs.map((pack) => (
-                <form key={pack.priceId} action="/api/checkout" method="POST">
-                  <input type="hidden" name="type" value="credits" />
-                  <input type="hidden" name="priceId" value={pack.priceId} />
-                  <button className="btn-ghost w-full">Buy {pack.credits} Boost Credits</button>
-                </form>
-              ))}
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-lg font-semibold">Boosts</h2>
+              <span className="badge-pill border border-line bg-porcelain text-stone2">Coming Soon</span>
             </div>
+            <p className="mt-1 text-xs text-stone2">
+              Boosts will push your ad to the top of the search list for a limited time. Not available to
+              purchase yet — check back soon.
+            </p>
             {recent.length > 0 && (
               <ul className="mt-4 grid gap-1 border-t border-line pt-4 text-xs text-stone2">
                 {recent.map((e) => (
