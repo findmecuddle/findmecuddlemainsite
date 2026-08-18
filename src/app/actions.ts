@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { cuddlers, creditEvents, cuddlerHours, agencyEmployees, inquiries, flaggedContacts } from "@/lib/schema";
+import { cuddlers, creditEvents, cuddlerHours, agencyEmployees, inquiries, flaggedContacts, appointments } from "@/lib/schema";
 import { currentCuddler, currentClerkUserId, clerkEmail } from "@/lib/auth";
 import { resolveLocationStrict } from "@/lib/geo";
 import { isVip, isAgencyAccount, agencyEmployeeLimit } from "@/lib/stripe";
@@ -21,6 +21,7 @@ import {
   FLAG_REASON_MAX_CHARS,
   FLAG_YELLOW_AT,
   FLAG_RED_AT,
+  DURATION_OPTIONS,
 } from "@/lib/config";
 import { stripe } from "@/lib/stripe";
 import { deleteObject, keyFromPublicUrl } from "@/lib/storage";
@@ -701,6 +702,92 @@ export async function markInquiryRead(formData: FormData) {
 
   await db.update(inquiries).set({ readAt: new Date() }).where(inArray(inquiries.id, ownIds));
   revalidatePath("/dashboard");
+}
+
+// ---------- Appointment calendar (see /dashboard/calendar) ----------
+// A purely organizational tool for the cuddler themselves — see the block comment on the
+// `appointments` table in lib/schema.ts. Nothing here is client-facing.
+
+export async function listAppointments(cuddlerId: string) {
+  // Same reasoning as listInquiries above: re-check against the signed-in cuddler even though
+  // every current caller already passes their own id, since this file's exports are all
+  // independently callable server actions.
+  const me = await currentCuddler();
+  if (!me || me.id !== cuddlerId) return [];
+
+  return db
+    .select()
+    .from(appointments)
+    .where(eq(appointments.cuddlerId, cuddlerId))
+    .orderBy(asc(appointments.date), asc(appointments.time));
+}
+
+/** Manual "Add Appointment" — for anything arranged off-platform (call, text, in-person) that a
+ *  cuddler wants on their calendar, not just inquiries that came through the site. */
+export async function createAppointment(
+  _prev: unknown,
+  formData: FormData
+): Promise<{ error?: string } | void> {
+  const me = await currentCuddler();
+  if (!me) return { error: "Not signed in." };
+
+  const clientName = String(formData.get("clientName") || "").trim();
+  const date = String(formData.get("date") || "").trim();
+  const time = String(formData.get("time") || "").trim() || null;
+  const rawDuration = String(formData.get("duration") || "").trim();
+  const duration = DURATION_OPTIONS.includes(rawDuration) ? rawDuration : null;
+  const notes = String(formData.get("notes") || "").trim() || null;
+
+  if (!clientName) return { error: "Enter a name." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Pick a valid date." };
+
+  await db.insert(appointments).values({ cuddlerId: me.id, clientName, date, time, duration, notes });
+  revalidatePath("/dashboard/calendar");
+}
+
+/** "Accept" on an inquiry — turns a message that included a proposed date/time into a calendar
+ *  entry. Date/time are editable at accept-time (pre-filled from the inquiry where available) in
+ *  case the actual agreed time differs from what was originally requested, or the inquiry was
+ *  "Whenever You're Open" (flexible), which has nothing to pre-fill. */
+export async function acceptInquiryAsAppointment(
+  _prev: unknown,
+  formData: FormData
+): Promise<{ error?: string } | void> {
+  const me = await currentCuddler();
+  if (!me) return { error: "Not signed in." };
+
+  const inquiryId = String(formData.get("inquiryId") || "");
+  const [inquiry] = await db.select().from(inquiries).where(eq(inquiries.id, inquiryId)).limit(1);
+  if (!inquiry || inquiry.cuddlerId !== me.id) return { error: "Message not found." };
+
+  const date = String(formData.get("date") || "").trim();
+  const time = String(formData.get("time") || "").trim() || null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Pick a valid date." };
+
+  await db.insert(appointments).values({
+    cuddlerId: me.id,
+    clientName: inquiry.clientName,
+    date,
+    time,
+    duration: inquiry.duration,
+    notes: inquiry.message,
+    sourceInquiryId: inquiry.id,
+  });
+  revalidatePath("/dashboard/calendar");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteAppointment(formData: FormData) {
+  const me = await currentCuddler();
+  if (!me) return;
+  const id = String(formData.get("id") || "");
+  if (!id) return;
+
+  const [row] = await db.select().from(appointments).where(eq(appointments.id, id)).limit(1);
+  if (!row || row.cuddlerId !== me.id) return;
+
+  await db.delete(appointments).where(eq(appointments.id, id));
+  revalidatePath("/dashboard/calendar");
 }
 
 /** Flags a client's phone number OR email as unreliable/spam/no-show/etc. — the standalone

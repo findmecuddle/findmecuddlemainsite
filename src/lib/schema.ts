@@ -580,6 +580,37 @@ export const inquiries = sqliteTable(
   })
 );
 
+// A cuddler's personal appointment calendar (see /dashboard/calendar) — either created by
+// "Accept"-ing an inquiry that came with a proposed date/time (sourceInquiryId set, so we know
+// where it came from), or added manually for anything arranged off-platform (call, text,
+// in-person). Purely an organizational tool for the cuddler themselves: nothing here is shown to
+// clients, doesn't block or reserve a time slot, and doesn't affect Hours/Available Now — a
+// cuddler is responsible for their own scheduling, same as any independent contractor.
+export const appointments = sqliteTable(
+  "appointments",
+  {
+    id: text("id").primaryKey().$defaultFn(createId),
+    cuddlerId: text("cuddler_id")
+      .notNull()
+      .references(() => cuddlers.id, { onDelete: "cascade" }),
+    clientName: text("client_name").notNull(),
+    date: text("date").notNull(), // "YYYY-MM-DD"
+    time: text("time"), // "HH:MM", or null if no specific time was set
+    duration: text("duration"), // one of DURATION_OPTIONS in lib/config.ts, or null
+    notes: text("notes"),
+    // Set when created via "Accept" on an inquiry (see acceptInquiryAsAppointment in actions.ts) —
+    // null for manually-added appointments. onDelete "set null" rather than cascade: deleting the
+    // original inquiry message shouldn't wipe out an appointment already on the calendar.
+    sourceInquiryId: text("source_inquiry_id").references(() => inquiries.id, { onDelete: "set null" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => ({
+    cuddlerDateIdx: index("appointments_cuddler_date_idx").on(t.cuddlerId, t.date),
+  })
+);
+
 // Lets a cuddler flag a client's phone number OR email (e.g. after a no-show, scam, or
 // harassment) so it shows as a warning to OTHER cuddlers too if that same contact messages
 // them — a shared, platform-wide signal rather than private per-cuddler notes. Deliberately

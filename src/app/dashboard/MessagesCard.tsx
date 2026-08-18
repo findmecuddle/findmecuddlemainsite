@@ -2,11 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useFormState } from "react-dom";
+import Link from "next/link";
 import {
   markInquiryRead,
   deleteInquiries,
   reportContact,
   deleteMyReport,
+  acceptInquiryAsAppointment,
   type listInquiries,
   type listMyReports,
 } from "@/app/actions";
@@ -66,7 +68,12 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
     <section className="card p-6">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-lg font-semibold">Messages</h2>
-        {unreadCount > 0 && <span className="badge-pill bg-spruce text-white">{unreadCount} New</span>}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && <span className="badge-pill bg-spruce text-white">{unreadCount} New</span>}
+          <Link href="/dashboard/calendar" className="text-xs font-medium text-spruce hover:underline">
+            My Calendar →
+          </Link>
+        </div>
       </div>
       <p className="mt-1 text-sm text-stone2">
         Every "Send My Info" request lands here and is emailed to you right away, even while you're offline. A
@@ -268,8 +275,53 @@ function MessageRow({
         {(inquiry.clientPhone || inquiry.clientEmail) && (
           <QuickReport phone={inquiry.clientPhone} email={inquiry.clientEmail} alreadyFlagged={severity !== "none"} />
         )}
+        <AcceptInquiryButton inquiry={inquiry} />
       </div>
     </li>
+  );
+}
+
+/** Turns a message into a calendar entry (see /dashboard/calendar) — opens a small inline form
+ *  instead of accepting instantly, since the actual agreed time often isn't exactly what was
+ *  first requested (or nothing was requested at all — "Whenever You're Open"). Pre-fills from the
+ *  inquiry's preferredDate/preferredTime where available. Uses a direct transition (like
+ *  PhotoUploader's flag/undo-crop buttons) rather than useFormState so the form only collapses on
+ *  an actual success, not on every submit regardless of whether it errored. */
+function AcceptInquiryButton({ inquiry }: { inquiry: Inquiry }) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="btn-ghost px-3 py-1.5 text-xs text-spruce">
+        Accept → Add To Calendar
+      </button>
+    );
+  }
+
+  function submit(formData: FormData) {
+    setError(null);
+    startTransition(async () => {
+      const result = await acceptInquiryAsAppointment(null, formData);
+      if (result?.error) setError(result.error);
+      else setOpen(false);
+    });
+  }
+
+  return (
+    <form action={submit} className="mt-2 flex w-full flex-wrap items-center gap-2 rounded-lg bg-porcelain p-2">
+      <input type="hidden" name="inquiryId" value={inquiry.id} />
+      <input type="date" name="date" defaultValue={inquiry.preferredDate ?? ""} required className="field text-xs" />
+      <input type="time" name="time" defaultValue={inquiry.preferredTime ?? ""} className="field text-xs" />
+      <button disabled={pending} className="btn-primary px-3 py-1.5 text-xs disabled:opacity-50">
+        {pending ? "Adding…" : "Confirm"}
+      </button>
+      <button type="button" onClick={() => setOpen(false)} className="btn-ghost px-3 py-1.5 text-xs">
+        Cancel
+      </button>
+      {error && <p className="w-full text-xs text-red-700">{error}</p>}
+    </form>
   );
 }
 

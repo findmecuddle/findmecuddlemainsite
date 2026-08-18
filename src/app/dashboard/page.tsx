@@ -138,6 +138,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
           )}
         </TabLink>
         <TabLink href="/dashboard?tab=privacy" active={activeTab === "privacy"}>Privacy</TabLink>
+        <TabLink href="/dashboard/calendar" active={false}>My Calendar</TabLink>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr,360px]">
