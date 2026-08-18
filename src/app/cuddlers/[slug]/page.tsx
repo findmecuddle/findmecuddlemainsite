@@ -467,7 +467,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
                         ? blocks
                             .map((b) => `${formatTime12(b.openTime) ?? "?"} – ${formatTime12(b.closeTime) ?? "?"}`)
                             .join(", ")
-                        : "Closed"}
+                        : "Unavailable"}
                     </span>
                   </li>
                 ))}

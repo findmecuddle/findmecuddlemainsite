@@ -395,11 +395,8 @@ export default function ListingForm({
       </div>
 
       <div className="border-t border-line pt-4">
-        <p className="text-sm font-medium text-ink">Photo Requirements</p>
-        <p className="mt-1 text-xs text-stone2">
-          Include at least one full-face photo of yourself, no AI-generated images, and one photo of your
-          workspace, agency, or location. Photos go live as soon as you upload them.
-        </p>
+        <p className="text-sm font-medium text-ink">Photos</p>
+        <p className="mt-1 text-xs text-stone2">At least 1 photo required. Photos go live as soon as you upload them.</p>
         {t.photosStatus === "approved" && (
           <p className="mt-2 text-xs font-medium text-spruce">✓ Your photos are live.</p>
         )}
