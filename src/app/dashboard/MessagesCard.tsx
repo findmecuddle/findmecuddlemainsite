@@ -31,6 +31,51 @@ function formatTime12(hm: string | null): string | null {
   return `${h12}:${String(m).padStart(2, "0")} ${period}`;
 }
 
+/** Rough length in minutes for a DURATION_OPTIONS value (see lib/config.ts: "30 min", "1
+ *  hour"..."23 hours", "Overnight") — only used for conflict-checking below, so an unknown/empty
+ *  duration falls back to a conservative 1 hour rather than 0 (a 0-length block could never
+ *  conflict with anything, which would silently hide a real double-booking). */
+function durationToMinutes(d: string | null): number {
+  if (!d) return 60;
+  if (d === "Overnight") return 720;
+  const min = /^(\d+)\s*min$/.exec(d);
+  if (min) return parseInt(min[1], 10);
+  const hrs = /^(\d+)\s*hours?$/.exec(d);
+  if (hrs) return parseInt(hrs[1], 10) * 60;
+  return 60;
+}
+
+function timeToMinutes(hm: string | null): number | null {
+  if (!hm) return null;
+  const [h, m] = hm.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  return h * 60 + m;
+}
+
+/** Every existing appointment on `date` that overlaps [time, time + duration) — used to warn a
+ *  cuddler, before they accept, that they're already booked then. If no specific time was
+ *  requested (flexible "Whenever open"), or an existing appointment has no time set either, it
+ *  can't be ruled out as a conflict, so it's included as a heads-up rather than silently skipped. */
+function findConflicts(
+  date: string | null,
+  time: string | null,
+  duration: string | null,
+  appointments: Appointment[]
+): Appointment[] {
+  if (!date) return [];
+  const dayAppts = appointments.filter((a) => a.date === date);
+  if (dayAppts.length === 0) return [];
+  const startMin = timeToMinutes(time);
+  if (startMin == null) return dayAppts;
+  const endMin = startMin + durationToMinutes(duration);
+  return dayAppts.filter((a) => {
+    const aStart = timeToMinutes(a.time);
+    if (aStart == null) return true;
+    const aEnd = aStart + durationToMinutes(a.duration);
+    return startMin < aEnd && aStart < endMin;
+  });
+}
+
 const LOCATION_LABEL: Record<string, string> = {
   incall: "In-Studio",
   outcall: "Outcall",
@@ -232,6 +277,7 @@ export default function MessagesCard({
               key={inq.id}
               inquiry={inq}
               appointment={appointmentByInquiryId.get(inq.id) ?? null}
+              appointments={appointments}
               checked={selected.has(inq.id)}
               onToggle={() => toggle(inq.id)}
               onDelete={() => deleteMessages([inq.id])}
@@ -287,6 +333,7 @@ function MyReports({ reports }: { reports: MyReport[] }) {
 function MessageRow({
   inquiry,
   appointment,
+  appointments,
   checked,
   onToggle,
   onDelete,
@@ -294,6 +341,7 @@ function MessageRow({
 }: {
   inquiry: Inquiry;
   appointment: Appointment | null;
+  appointments: Appointment[];
   checked: boolean;
   onToggle: () => void;
   onDelete: () => void;
@@ -305,6 +353,12 @@ function MessageRow({
   const whenLabel = inquiry.flexible
     ? "Whenever open"
     : [inquiry.preferredDate, inquiry.preferredTime].filter(Boolean).join(" at ") || null;
+  // Checks the requested date/time against everything already on the calendar — lets a cuddler
+  // see they're double-booked before they hit Accept, instead of finding out later.
+  const conflicts =
+    status === "pending" && !inquiry.flexible
+      ? findConflicts(inquiry.preferredDate, inquiry.preferredTime, inquiry.duration, appointments)
+      : [];
 
   return (
     <li className={`rounded-lg border p-3 text-sm ${unread ? "border-spruce bg-spruce-tint" : "border-line"}`}>
@@ -360,6 +414,13 @@ function MessageRow({
       )}
       {inquiry.message && <p className="mt-2 leading-relaxed text-ink">{inquiry.message}</p>}
 
+      {conflicts.length > 0 && (
+        <p className="mt-2 text-xs font-medium text-red-700">
+          ⚠ You're already booked with {conflicts.map((c) => c.clientName).join(", ")} around this time — review
+          before accepting.
+        </p>
+      )}
+
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-2">
         {unread && (
           <form action={markInquiryRead}>
@@ -379,7 +440,7 @@ function MessageRow({
         )}
         {status === "pending" && (
           <>
-            <AcceptInquiryButton inquiry={inquiry} />
+            <AcceptInquiryButton inquiry={inquiry} appointments={appointments} hasConflict={conflicts.length > 0} />
             <button type="button" onClick={onDeny} className="btn-ghost px-3 py-1.5 text-xs text-stone2">
               Deny
             </button>
@@ -458,19 +519,39 @@ function EditApptTimeButton({ appointment }: { appointment: Appointment }) {
  *  first requested (or nothing was requested at all — "Whenever You're Open"). Pre-fills from the
  *  inquiry's preferredDate/preferredTime where available. Uses a direct transition (like
  *  PhotoUploader's flag/undo-crop buttons) rather than useFormState so the form only collapses on
- *  an actual success, not on every submit regardless of whether it errored. */
-function AcceptInquiryButton({ inquiry }: { inquiry: Inquiry }) {
+ *  an actual success, not on every submit regardless of whether it errored.
+ *
+ *  Date/time are controlled inputs (rather than defaultValue) specifically so the conflict check
+ *  can re-run live as the cuddler edits them — pick a different, free slot and the warning
+ *  clears without needing to cancel and reopen the form. */
+function AcceptInquiryButton({
+  inquiry,
+  appointments,
+  hasConflict,
+}: {
+  inquiry: Inquiry;
+  appointments: Appointment[];
+  hasConflict: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [date, setDate] = useState(inquiry.preferredDate ?? "");
+  const [time, setTime] = useState(inquiry.preferredTime ?? "");
 
   if (!open) {
     return (
-      <button type="button" onClick={() => setOpen(true)} className="btn-ghost px-3 py-1.5 text-xs text-spruce">
-        Accept → Add To Calendar
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={`btn-ghost px-3 py-1.5 text-xs ${hasConflict ? "text-red-700" : "text-spruce"}`}
+      >
+        {hasConflict ? "⚠ Review Conflict & Accept" : "Accept → Add To Calendar"}
       </button>
     );
   }
+
+  const liveConflicts = findConflicts(date || null, time || null, inquiry.duration, appointments);
 
   function submit(formData: FormData) {
     setError(null);
@@ -484,14 +565,33 @@ function AcceptInquiryButton({ inquiry }: { inquiry: Inquiry }) {
   return (
     <form action={submit} className="mt-2 flex w-full flex-wrap items-center gap-2 rounded-lg bg-porcelain p-2">
       <input type="hidden" name="inquiryId" value={inquiry.id} />
-      <input type="date" name="date" defaultValue={inquiry.preferredDate ?? ""} required className="field text-xs" />
-      <input type="time" name="time" defaultValue={inquiry.preferredTime ?? ""} className="field text-xs" />
+      <input
+        type="date"
+        name="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        required
+        className="field text-xs"
+      />
+      <input
+        type="time"
+        name="time"
+        value={time}
+        onChange={(e) => setTime(e.target.value)}
+        className="field text-xs"
+      />
       <button disabled={pending} className="btn-primary px-3 py-1.5 text-xs disabled:opacity-50">
         {pending ? "Adding…" : "Confirm"}
       </button>
       <button type="button" onClick={() => setOpen(false)} className="btn-ghost px-3 py-1.5 text-xs">
         Cancel
       </button>
+      {liveConflicts.length > 0 && (
+        <p className="w-full text-xs text-red-700">
+          ⚠ Already booked with {liveConflicts.map((c) => c.clientName).join(", ")} at this date/time — pick a
+          different slot above, or confirm anyway if you can actually fit both.
+        </p>
+      )}
       {error && <p className="w-full text-xs text-red-700">{error}</p>}
     </form>
   );
