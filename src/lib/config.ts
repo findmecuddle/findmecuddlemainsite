@@ -35,9 +35,15 @@ export const LOCATION_TYPE_OPTIONS: { value: "incall" | "outcall"; label: string
   { value: "incall", label: "At Their Place" },
   { value: "outcall", label: "At My Place" },
 ];
-// Same labels as RATE_DURATIONS above, kept as a separate plain-string list since an inquiry's
-// requested duration isn't tied to a specific priced column the way a listing's own rates are.
-export const DURATION_OPTIONS: string[] = ["30 min", "60 min", "90 min", "2 hours+"];
+// Separate plain-string list from RATE_DURATIONS above, since an inquiry's requested duration
+// isn't tied to a specific priced column the way a listing's own rates are — a client can ask for
+// any length, not just the ones the cuddler has a set price for. Half-hour granularity up to an
+// hour, then hourly up to 23 hours, then "Overnight" as the last option for a full-night request.
+export const DURATION_OPTIONS: string[] = [
+  "30 min",
+  ...Array.from({ length: 23 }, (_, i) => `${i + 1} hour${i + 1 > 1 ? "s" : ""}`),
+  "Overnight",
+];
 
 // --- Flagging a client's phone number or email from the dashboard message list (see actions.ts's
 // reportContact and flagSeverityFor) ---
