@@ -39,10 +39,20 @@ export async function deleteCuddlerAccount(t: Cuddler): Promise<void> {
   await db.delete(cuddlers).where(eq(cuddlers.id, t.id));
 
   // Delete the Clerk login too — otherwise the account would still exist and be able to sign in
-  // even though its listing/data is gone. Best-effort: DB deletion above is the part that matters
-  // most for CCPA, so don't fail the whole request if Clerk is briefly unreachable.
+  // even though its listing/data is gone, and would also block that email from signing up again
+  // (see completeOnboarding's existing-email check in app/actions.ts). Best-effort: DB deletion
+  // above is the part that matters most for CCPA, so don't fail the whole request if Clerk is
+  // briefly unreachable — but DO log it, since a silent failure here leaves a login-only zombie
+  // account that's otherwise invisible until someone tries to re-signup with the same email.
   if (t.clerkUserId) {
     const clerk = await clerkClient();
-    await clerk.users.deleteUser(t.clerkUserId).catch(() => {});
+    await clerk.users.deleteUser(t.clerkUserId).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error(
+        `Failed to delete Clerk user ${t.clerkUserId} (email ${t.email}) during account deletion — ` +
+          `this email is likely now blocked from re-signup until the Clerk user is deleted manually:`,
+        err
+      );
+    });
   }
 }
