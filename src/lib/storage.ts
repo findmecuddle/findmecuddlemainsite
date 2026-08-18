@@ -47,6 +47,12 @@ export async function uploadObject(key: string, body: Buffer, contentType: strin
   if (!process.env.S3_BUCKET || !process.env.S3_PUBLIC_URL_BASE) {
     throw new Error("Public object storage isn't configured. Missing S3_BUCKET or S3_PUBLIC_URL_BASE. See .env.example.");
   }
+  // No ACL param here on purpose — Cloudflare R2 doesn't support per-object ACLs (returns a hard
+  // "501 Not Implemented" if you send one, unlike AWS S3 which just applies it). Public access is
+  // controlled at the bucket level instead (R2's "Public Development URL" toggle, or a custom
+  // domain) — see S3_PUBLIC_URL_BASE. If this project ever moves back to a provider that does use
+  // per-object ACLs (plain AWS S3, some IONOS setups), the bucket's default/base ACL should be set
+  // to public at the bucket level too, so this stays provider-agnostic either way.
   await client().send(
     new PutObjectCommand({
       Bucket: process.env.S3_BUCKET,
@@ -54,7 +60,6 @@ export async function uploadObject(key: string, body: Buffer, contentType: strin
       Body: body,
       ContentType: contentType,
       CacheControl: "public, max-age=31536000, immutable",
-      ACL: "public-read",
     })
   );
   const base = process.env.S3_PUBLIC_URL_BASE.replace(/\/$/, "");
