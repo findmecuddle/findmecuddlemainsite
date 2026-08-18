@@ -598,6 +598,12 @@ export const appointments = sqliteTable(
       .notNull()
       .references(() => cuddlers.id, { onDelete: "cascade" }),
     clientName: text("client_name").notNull(),
+    // Copied in from the inquiry at accept-time (see acceptInquiryAsAppointment), or entered
+    // manually — kept here too (not just looked up via sourceInquiryId) so the calendar card is
+    // self-contained even for manual entries with no linked inquiry, and stays put if the
+    // original message is later deleted from the inbox.
+    clientPhone: text("client_phone"),
+    clientEmail: text("client_email"),
     date: text("date").notNull(), // "YYYY-MM-DD"
     time: text("time"), // "HH:MM", or null if no specific time was set
     duration: text("duration"), // one of DURATION_OPTIONS in lib/config.ts, or null

@@ -174,6 +174,20 @@ export default function CalendarView({ appointments }: { appointments: Appointme
                       {formatTime12(a.time) && <span className="ml-2 font-normal text-stone2">{formatTime12(a.time)}</span>}
                       {a.duration && <span className="ml-2 font-normal text-stone2">· {a.duration}</span>}
                     </p>
+                    {(a.clientPhone || a.clientEmail) && (
+                      <p className="mt-0.5 flex flex-wrap gap-x-3 text-xs text-stone2">
+                        {a.clientPhone && (
+                          <a href={`tel:${a.clientPhone}`} className="hover:text-spruce hover:underline">
+                            {a.clientPhone}
+                          </a>
+                        )}
+                        {a.clientEmail && (
+                          <a href={`mailto:${a.clientEmail}`} className="hover:text-spruce hover:underline">
+                            {a.clientEmail}
+                          </a>
+                        )}
+                      </p>
+                    )}
                     {a.notes && <p className="mt-0.5 text-xs text-stone2">{a.notes}</p>}
                   </div>
                   <div className="flex items-center gap-2">
@@ -222,12 +236,14 @@ function AppointmentForm(
       ? {
           id: props.appointment.id,
           clientName: props.appointment.clientName,
+          clientPhone: props.appointment.clientPhone ?? "",
+          clientEmail: props.appointment.clientEmail ?? "",
           date: props.appointment.date,
           time: props.appointment.time ?? "",
           duration: props.appointment.duration ?? "",
           notes: props.appointment.notes ?? "",
         }
-      : { id: "", clientName: "", date: props.date, time: "", duration: "", notes: "" };
+      : { id: "", clientName: "", clientPhone: "", clientEmail: "", date: props.date, time: "", duration: "", notes: "" };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
@@ -237,6 +253,16 @@ function AppointmentForm(
         <div>
           <label className="label" htmlFor="apptClientName">Client Name</label>
           <input id="apptClientName" name="clientName" required defaultValue={defaults.clientName} className="field" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label" htmlFor="apptClientPhone">Phone (Optional)</label>
+            <input id="apptClientPhone" name="clientPhone" type="tel" defaultValue={defaults.clientPhone} className="field" />
+          </div>
+          <div>
+            <label className="label" htmlFor="apptClientEmail">Email (Optional)</label>
+            <input id="apptClientEmail" name="clientEmail" type="email" defaultValue={defaults.clientEmail} className="field" />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>

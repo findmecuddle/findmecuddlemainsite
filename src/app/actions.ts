@@ -765,6 +765,8 @@ export async function createAppointment(
   if (!me) return { error: "Not signed in." };
 
   const clientName = String(formData.get("clientName") || "").trim();
+  const clientPhone = String(formData.get("clientPhone") || "").trim() || null;
+  const clientEmail = String(formData.get("clientEmail") || "").trim() || null;
   const date = String(formData.get("date") || "").trim();
   const time = String(formData.get("time") || "").trim() || null;
   const rawDuration = String(formData.get("duration") || "").trim();
@@ -774,7 +776,16 @@ export async function createAppointment(
   if (!clientName) return { error: "Enter a name." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Pick a valid date." };
 
-  await db.insert(appointments).values({ cuddlerId: me.id, clientName, date, time, duration, notes });
+  await db.insert(appointments).values({
+    cuddlerId: me.id,
+    clientName,
+    clientPhone,
+    clientEmail,
+    date,
+    time,
+    duration,
+    notes,
+  });
   revalidatePath("/dashboard/calendar");
 }
 
@@ -800,6 +811,8 @@ export async function acceptInquiryAsAppointment(
   await db.insert(appointments).values({
     cuddlerId: me.id,
     clientName: inquiry.clientName,
+    clientPhone: inquiry.clientPhone,
+    clientEmail: inquiry.clientEmail,
     date,
     time,
     duration: inquiry.duration,
@@ -838,6 +851,8 @@ export async function updateAppointment(
   if (!row || row.cuddlerId !== me.id) return { error: "Appointment not found." };
 
   const clientName = String(formData.get("clientName") || "").trim();
+  const clientPhone = String(formData.get("clientPhone") || "").trim() || null;
+  const clientEmail = String(formData.get("clientEmail") || "").trim() || null;
   const date = String(formData.get("date") || "").trim();
   const time = String(formData.get("time") || "").trim() || null;
   const rawDuration = String(formData.get("duration") || "").trim();
@@ -847,7 +862,10 @@ export async function updateAppointment(
   if (!clientName) return { error: "Enter a name." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Pick a valid date." };
 
-  await db.update(appointments).set({ clientName, date, time, duration, notes }).where(eq(appointments.id, id));
+  await db
+    .update(appointments)
+    .set({ clientName, clientPhone, clientEmail, date, time, duration, notes })
+    .where(eq(appointments.id, id));
   revalidatePath("/dashboard/calendar");
 }
 
