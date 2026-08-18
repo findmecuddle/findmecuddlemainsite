@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { MapPin, Calendar, Info, Headphones, Crown, Zap } from "lucide-react";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { cuddlers, type Cuddler } from "@/lib/schema";
+import { cuddlers, cuddlerHours, type Cuddler } from "@/lib/schema";
 import { isLive, isNewListing, isVip, isBoosted, photosApproved } from "@/lib/stripe";
+import { isOpenNow, isManuallyOpen } from "@/lib/hours";
 import { SITE_NAME, SITE_URL } from "@/lib/config";
 import SearchBar from "@/components/SearchBar";
 import InstagramFeed from "@/components/InstagramFeed";
@@ -31,6 +32,25 @@ export default async function HomePage() {
     .where(and(eq(cuddlers.published, true), eq(cuddlers.subStatus, "active")))
     .orderBy(desc(cuddlers.createdAt));
   const live = candidates.filter(isLive);
+
+  // Same "open right now" computation as search results (see findNearbyCuddlers in
+  // lib/nearbySearch.ts) — attached here too so the homepage showcases can show the same badge.
+  const openNowById = new Map<string, boolean>();
+  if (live.length > 0) {
+    const hourRows = await db
+      .select()
+      .from(cuddlerHours)
+      .where(inArray(cuddlerHours.cuddlerId, live.map((t) => t.id)));
+    const hoursByCuddler = new Map<string, typeof hourRows>();
+    for (const row of hourRows) {
+      const list = hoursByCuddler.get(row.cuddlerId) ?? [];
+      list.push(row);
+      hoursByCuddler.set(row.cuddlerId, list);
+    }
+    for (const t of live) {
+      openNowById.set(t.id, isManuallyOpen(t) || isOpenNow(hoursByCuddler.get(t.id) ?? [], t.state));
+    }
+  }
 
   const boostedProviders = live
     .filter(isBoosted)
@@ -137,7 +157,7 @@ export default async function HomePage() {
               Boosted Right Now
             </h2>
             <p className="mt-1 text-sm text-stone2">Currently in the spotlight, the paid boost perk in action.</p>
-            <MiniProfileGrid cuddlers={boostedProviders} badge="boosted" />
+            <MiniProfileGrid cuddlers={boostedProviders} badge="boosted" openNowById={openNowById} />
           </div>
         </section>
       )}
@@ -150,7 +170,7 @@ export default async function HomePage() {
               Monthly VIP Members
             </h2>
             <p className="mt-1 text-sm text-stone2">Our VIP subscribers, from across the country.</p>
-            <MiniProfileGrid cuddlers={vipProviders} badge="vip" />
+            <MiniProfileGrid cuddlers={vipProviders} badge="vip" openNowById={openNowById} />
           </div>
         </section>
       )}
@@ -160,7 +180,7 @@ export default async function HomePage() {
           <div className="container-page py-10">
             <h2 className="font-display text-lg font-semibold">New on {SITE_NAME}</h2>
             <p className="mt-1 text-sm text-stone2">Recently joined, say Hello!</p>
-            <MiniProfileGrid cuddlers={newProviders} badge={null} compact />
+            <MiniProfileGrid cuddlers={newProviders} badge={null} compact openNowById={openNowById} />
           </div>
         </section>
       )}
@@ -212,11 +232,13 @@ function MiniProfileGrid({
   cuddlers,
   badge,
   compact = false,
+  openNowById,
 }: {
   cuddlers: Cuddler[];
   badge: BadgeKind;
   /** Smaller thumbnails for the (lower-priority) New section. */
   compact?: boolean;
+  openNowById: Map<string, boolean>;
 }) {
   return (
     <ul className={`mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 ${compact ? "lg:grid-cols-6" : "lg:grid-cols-4"}`}>
@@ -246,6 +268,12 @@ function MiniProfileGrid({
                 <span className="badge-pill absolute left-1.5 top-1.5 bg-gradient-to-r from-spruce-deep to-spruce text-white shadow-sm ring-1 ring-gold/40">
                   <Crown className="h-3 w-3 shrink-0 text-gold" strokeWidth={2.5} />
                   VIP
+                </span>
+              )}
+              {openNowById.get(t.id) && (
+                <span className="badge-pill absolute right-1.5 top-1.5 bg-emerald-50 text-emerald-700 shadow-sm">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                  Open Now
                 </span>
               )}
             </div>
