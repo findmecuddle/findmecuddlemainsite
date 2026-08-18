@@ -129,6 +129,8 @@ export async function POST(req: NextRequest) {
     const key = `cuddlers/${cuddlerId}/photo-${slot}-${Date.now()}.jpg`;
     url = await uploadObject(key, outputBuffer, "image/jpeg");
   } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("Admin photo upload to object storage failed:", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Upload storage isn't configured." },
       { status: 500 }

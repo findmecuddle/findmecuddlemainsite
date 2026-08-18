@@ -408,23 +408,24 @@ export default function ListingForm({
         admin={flagPhotoAction && undoCropAction ? { flagPhotoAction, undoCropAction } : undefined}
       />
 
-      <p className="border-t border-line pt-4 text-xs text-stone2">
-        Publishing your ad live is now a one-click toggle in the Status card on the right, not part of this
-        form.
-      </p>
-
-      <label className="flex items-start gap-2 border-t border-line pt-4 text-sm">
-        <input
-          type="checkbox"
-          name="socialMediaOptIn"
-          defaultChecked={t.socialMediaOptIn}
-          className="mt-0.5 h-4 w-4 accent-spruce"
-        />
-        <span>
-          I agree to let Find Me Cuddle use my listing information and photos in our marketing
-          and social media (Instagram, X, etc.). (Optional) You can uncheck this any time.
-        </span>
-      </label>
+      <div className="border-t border-line pt-4">
+        <p className="text-xs text-stone2">
+          Publishing your ad live is now a one-click toggle in the Status card on the right, not part of this
+          form.
+        </p>
+        <label className="mt-3 flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="socialMediaOptIn"
+            defaultChecked={t.socialMediaOptIn}
+            className="mt-0.5 h-4 w-4 accent-spruce"
+          />
+          <span>
+            I agree to let Find Me Cuddle use my listing information and photos in our marketing
+            and social media (Instagram, X, etc.). (Optional) You can uncheck this any time.
+          </span>
+        </label>
+      </div>
 
       {state?.error && <p className="text-sm text-red-700">{state.error}</p>}
       {state?.ok && <p className="text-sm text-spruce">{state.ok}</p>}
