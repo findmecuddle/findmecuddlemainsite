@@ -9,6 +9,8 @@ import {
   reportContact,
   deleteMyReport,
   acceptInquiryAsAppointment,
+  denyInquiry,
+  resetInquiryStatus,
   type listInquiries,
   type listMyReports,
 } from "@/app/actions";
@@ -27,10 +29,27 @@ const SEVERITY_STYLE: Record<"yellow" | "red", string> = {
   red: "font-medium text-red-700",
 };
 
+const STATUS_TABS = [
+  { key: "pending", label: "Pending" },
+  { key: "accepted", label: "Accepted" },
+  { key: "denied", label: "Denied" },
+] as const;
+type StatusTab = (typeof STATUS_TABS)[number]["key"];
+
 export default function MessagesCard({ inquiries, myReports }: { inquiries: Inquiry[]; myReports: MyReport[] }) {
   const unreadCount = inquiries.filter((i) => !i.readAt).length;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
+  const [tab, setTab] = useState<StatusTab>("pending");
+
+  // Anything without an explicit status (shouldn't happen post-migration, but defensive for any
+  // row that predates the status column) counts as pending, same as the DB column's own default.
+  const counts = {
+    pending: inquiries.filter((i) => (i.status ?? "pending") === "pending").length,
+    accepted: inquiries.filter((i) => i.status === "accepted").length,
+    denied: inquiries.filter((i) => i.status === "denied").length,
+  };
+  const tabInquiries = inquiries.filter((i) => (i.status ?? "pending") === tab);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -62,7 +81,17 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
     setSelected(new Set());
   };
 
-  const allChecked = inquiries.length > 0 && selected.size === inquiries.length;
+  const denyMessages = (ids: string[]) => {
+    if (ids.length === 0) return;
+    const fd = new FormData();
+    ids.forEach((id) => fd.append("id", id));
+    startTransition(() => {
+      denyInquiry(fd);
+    });
+    setSelected(new Set());
+  };
+
+  const allChecked = tabInquiries.length > 0 && selected.size === tabInquiries.length;
 
   return (
     <section className="card p-6">
@@ -81,13 +110,31 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
         why.
       </p>
 
-      {inquiries.length > 0 && (
+      <div className="mt-4 flex flex-wrap gap-1.5">
+        {STATUS_TABS.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => {
+              setTab(t.key);
+              setSelected(new Set());
+            }}
+            className={`rounded-full px-3 py-1 text-xs font-medium ${
+              tab === t.key ? "bg-spruce text-white" : "bg-porcelain text-stone2"
+            }`}
+          >
+            {t.label} ({counts[t.key]})
+          </button>
+        ))}
+      </div>
+
+      {tabInquiries.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
           <label className="flex items-center gap-2 text-xs text-stone2">
             <input
               type="checkbox"
               checked={allChecked}
-              onChange={() => setSelected(allChecked ? new Set() : new Set(inquiries.map((i) => i.id)))}
+              onChange={() => setSelected(allChecked ? new Set() : new Set(tabInquiries.map((i) => i.id)))}
             />
             Select All
           </label>
@@ -103,11 +150,21 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
             <button
               type="button"
               disabled={unreadCount === 0 || isPending}
-              onClick={() => markRead(inquiries.filter((i) => !i.readAt).map((i) => i.id))}
+              onClick={() => markRead(tabInquiries.filter((i) => !i.readAt).map((i) => i.id))}
               className="btn-ghost px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-50"
             >
               Mark All As Read
             </button>
+            {tab === "pending" && (
+              <button
+                type="button"
+                disabled={selected.size === 0 || isPending}
+                onClick={() => denyMessages(Array.from(selected))}
+                className="btn-ghost px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Deny Selected{selected.size > 0 ? ` (${selected.size})` : ""}
+              </button>
+            )}
             <button
               type="button"
               disabled={selected.size === 0 || isPending}
@@ -118,8 +175,8 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
             </button>
             <button
               type="button"
-              disabled={inquiries.length === 0 || isPending}
-              onClick={() => deleteMessages(inquiries.map((i) => i.id))}
+              disabled={tabInquiries.length === 0 || isPending}
+              onClick={() => deleteMessages(tabInquiries.map((i) => i.id))}
               className="btn-ghost px-3 py-1.5 text-xs text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Delete All
@@ -128,17 +185,20 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
         </div>
       )}
 
-      {inquiries.length === 0 ? (
-        <p className="mt-4 text-sm text-stone2">No messages yet.</p>
+      {tabInquiries.length === 0 ? (
+        <p className="mt-4 text-sm text-stone2">
+          {tab === "pending" ? "No pending messages." : tab === "accepted" ? "Nothing accepted yet." : "Nothing denied."}
+        </p>
       ) : (
         <ul className="mt-4 grid gap-3">
-          {inquiries.map((inq) => (
+          {tabInquiries.map((inq) => (
             <MessageRow
               key={inq.id}
               inquiry={inq}
               checked={selected.has(inq.id)}
               onToggle={() => toggle(inq.id)}
               onDelete={() => deleteMessages([inq.id])}
+              onDeny={() => denyMessages([inq.id])}
             />
           ))}
         </ul>
@@ -192,12 +252,15 @@ function MessageRow({
   checked,
   onToggle,
   onDelete,
+  onDeny,
 }: {
   inquiry: Inquiry;
   checked: boolean;
   onToggle: () => void;
   onDelete: () => void;
+  onDeny: () => void;
 }) {
+  const status = inquiry.status ?? "pending";
   const unread = !inquiry.readAt;
   const severity = inquiry.flagSeverity;
   const whenLabel = inquiry.flexible
@@ -275,7 +338,20 @@ function MessageRow({
         {(inquiry.clientPhone || inquiry.clientEmail) && (
           <QuickReport phone={inquiry.clientPhone} email={inquiry.clientEmail} alreadyFlagged={severity !== "none"} />
         )}
-        <AcceptInquiryButton inquiry={inquiry} />
+        {status === "pending" && (
+          <>
+            <AcceptInquiryButton inquiry={inquiry} />
+            <button type="button" onClick={onDeny} className="btn-ghost px-3 py-1.5 text-xs text-stone2">
+              Deny
+            </button>
+          </>
+        )}
+        {status !== "pending" && (
+          <form action={resetInquiryStatus}>
+            <input type="hidden" name="id" value={inquiry.id} />
+            <button className="btn-ghost px-3 py-1.5 text-xs text-stone2">Move Back To Pending</button>
+          </form>
+        )}
       </div>
     </li>
   );

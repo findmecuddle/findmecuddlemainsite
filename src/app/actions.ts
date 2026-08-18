@@ -704,6 +704,39 @@ export async function markInquiryRead(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+/** Marks a message "denied" — for a request the cuddler doesn't want to take, without deleting
+ *  the message outright (unlike Delete, which removes it entirely). Shows up in the inbox's
+ *  Denied tab instead of Pending. Same multi-id + ownership-check pattern as markInquiryRead. */
+export async function denyInquiry(formData: FormData) {
+  const me = await currentCuddler();
+  if (!me) return;
+  const ids = formData.getAll("id").map((v) => String(v)).filter(Boolean);
+  if (ids.length === 0) return;
+
+  const rows = await db.select().from(inquiries).where(inArray(inquiries.id, ids));
+  const ownIds = rows.filter((r) => r.cuddlerId === me.id).map((r) => r.id);
+  if (ownIds.length === 0) return;
+
+  await db.update(inquiries).set({ status: "denied", readAt: new Date() }).where(inArray(inquiries.id, ownIds));
+  revalidatePath("/dashboard");
+}
+
+/** Moves a message back to Pending — an undo for an accidental Deny (or Accept, though accepting
+ *  also leaves a calendar entry behind that this does NOT remove — cancel that separately from
+ *  the calendar if needed). */
+export async function resetInquiryStatus(formData: FormData) {
+  const me = await currentCuddler();
+  if (!me) return;
+  const id = String(formData.get("id") || "");
+  if (!id) return;
+
+  const [row] = await db.select().from(inquiries).where(eq(inquiries.id, id)).limit(1);
+  if (!row || row.cuddlerId !== me.id) return;
+
+  await db.update(inquiries).set({ status: "pending" }).where(eq(inquiries.id, id));
+  revalidatePath("/dashboard");
+}
+
 // ---------- Appointment calendar (see /dashboard/calendar) ----------
 // A purely organizational tool for the cuddler themselves — see the block comment on the
 // `appointments` table in lib/schema.ts. Nothing here is client-facing.
@@ -773,6 +806,7 @@ export async function acceptInquiryAsAppointment(
     notes: inquiry.message,
     sourceInquiryId: inquiry.id,
   });
+  await db.update(inquiries).set({ status: "accepted", readAt: inquiry.readAt ?? new Date() }).where(eq(inquiries.id, inquiry.id));
   revalidatePath("/dashboard/calendar");
   revalidatePath("/dashboard");
 }
@@ -787,6 +821,33 @@ export async function deleteAppointment(formData: FormData) {
   if (!row || row.cuddlerId !== me.id) return;
 
   await db.delete(appointments).where(eq(appointments.id, id));
+  revalidatePath("/dashboard/calendar");
+}
+
+/** Edits an existing calendar entry — clicking a day (see CalendarView.tsx) shows its
+ *  appointments in a list below the grid with Edit/Delete on each; this powers Edit. */
+export async function updateAppointment(
+  _prev: unknown,
+  formData: FormData
+): Promise<{ error?: string } | void> {
+  const me = await currentCuddler();
+  if (!me) return { error: "Not signed in." };
+
+  const id = String(formData.get("id") || "");
+  const [row] = await db.select().from(appointments).where(eq(appointments.id, id)).limit(1);
+  if (!row || row.cuddlerId !== me.id) return { error: "Appointment not found." };
+
+  const clientName = String(formData.get("clientName") || "").trim();
+  const date = String(formData.get("date") || "").trim();
+  const time = String(formData.get("time") || "").trim() || null;
+  const rawDuration = String(formData.get("duration") || "").trim();
+  const duration = DURATION_OPTIONS.includes(rawDuration) ? rawDuration : null;
+  const notes = String(formData.get("notes") || "").trim() || null;
+
+  if (!clientName) return { error: "Enter a name." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Pick a valid date." };
+
+  await db.update(appointments).set({ clientName, date, time, duration, notes }).where(eq(appointments.id, id));
   revalidatePath("/dashboard/calendar");
 }
 

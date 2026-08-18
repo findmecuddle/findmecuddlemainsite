@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { createAppointment, deleteAppointment, type listAppointments } from "@/app/actions";
+import { createAppointment, updateAppointment, deleteAppointment, type listAppointments } from "@/app/actions";
 import { DURATION_OPTIONS } from "@/lib/config";
 
 type Appointment = Awaited<ReturnType<typeof listAppointments>>[number];
@@ -10,6 +10,11 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function toDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function formatDateLabel(key: string): string {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
 function formatTime12(hm: string | null): string | null {
@@ -25,6 +30,8 @@ export default function CalendarView({ appointments }: { appointments: Appointme
   const today = useMemo(() => new Date(), []);
   const [monthCursor, setMonthCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
   const [addingFor, setAddingFor] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Appointment | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const byDate = useMemo(() => {
     const map = new Map<string, Appointment[]>();
@@ -56,6 +63,7 @@ export default function CalendarView({ appointments }: { appointments: Appointme
 
   const monthLabel = monthCursor.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   const todayKey = toDateKey(today);
+  const selectedDayAppointments = selectedDay ? byDate.get(selectedDay) ?? [] : [];
 
   return (
     <div>
@@ -98,95 +106,151 @@ export default function CalendarView({ appointments }: { appointments: Appointme
           const key = toDateKey(date);
           const dayAppointments = byDate.get(key) ?? [];
           const isToday = key === todayKey;
+          const isSelected = key === selectedDay;
           return (
-            <div
+            <button
               key={i}
-              className={`min-h-[90px] rounded-lg border p-1.5 ${
-                isToday ? "border-spruce bg-spruce-tint" : "border-line bg-white"
+              type="button"
+              onClick={() => setSelectedDay(key)}
+              className={`min-h-[90px] rounded-lg border p-1.5 text-left ${
+                isSelected ? "border-spruce ring-2 ring-spruce/30" : isToday ? "border-spruce bg-spruce-tint" : "border-line bg-white hover:border-spruce/40"
               }`}
             >
               <div className="flex items-center justify-between">
                 <span className={`text-xs ${isToday ? "font-semibold text-spruce" : "text-stone2"}`}>
                   {date.getDate()}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setAddingFor(key)}
+                <span
+                  role="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAddingFor(key);
+                  }}
                   className="text-xs text-stone2 hover:text-spruce"
                   aria-label={`Add appointment on ${key}`}
                 >
                   +
-                </button>
+                </span>
               </div>
               <ul className="mt-1 grid gap-1">
-                {dayAppointments.map((a) => (
-                  <li key={a.id} className="group rounded bg-porcelain px-1.5 py-1 text-[11px] leading-tight">
-                    <div className="flex items-start justify-between gap-1">
-                      <span className="min-w-0 truncate">
-                        {formatTime12(a.time) && <span className="font-medium">{formatTime12(a.time)} </span>}
-                        {a.clientName}
-                      </span>
-                      <form action={deleteAppointment}>
-                        <input type="hidden" name="id" value={a.id} />
-                        <button
-                          className="shrink-0 text-stone2 opacity-0 hover:text-red-700 group-hover:opacity-100"
-                          aria-label={`Remove appointment with ${a.clientName}`}
-                        >
-                          ×
-                        </button>
-                      </form>
-                    </div>
+                {dayAppointments.slice(0, 3).map((a) => (
+                  <li key={a.id} className="truncate rounded bg-porcelain px-1.5 py-1 text-[11px] leading-tight">
+                    {formatTime12(a.time) && <span className="font-medium">{formatTime12(a.time)} </span>}
+                    {a.clientName}
                   </li>
                 ))}
+                {dayAppointments.length > 3 && (
+                  <li className="px-1.5 text-[11px] text-stone2">+{dayAppointments.length - 3} more</li>
+                )}
               </ul>
-            </div>
+            </button>
           );
         })}
       </div>
 
-      {addingFor && <AddAppointmentForm date={addingFor} onClose={() => setAddingFor(null)} />}
+      {selectedDay && (
+        <div className="card mt-4 p-5">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-base font-semibold">{formatDateLabel(selectedDay)}</h3>
+            <button type="button" onClick={() => setSelectedDay(null)} className="text-xs text-stone2 hover:text-spruce">
+              Close
+            </button>
+          </div>
+          {selectedDayAppointments.length === 0 ? (
+            <p className="mt-3 text-sm text-stone2">
+              Nothing booked.{" "}
+              <button type="button" onClick={() => setAddingFor(selectedDay)} className="font-medium text-spruce hover:underline">
+                Add an appointment
+              </button>
+              .
+            </p>
+          ) : (
+            <ul className="mt-3 grid gap-2">
+              {selectedDayAppointments.map((a) => (
+                <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3 text-sm">
+                  <div>
+                    <p className="font-medium text-ink">
+                      {a.clientName}
+                      {formatTime12(a.time) && <span className="ml-2 font-normal text-stone2">{formatTime12(a.time)}</span>}
+                      {a.duration && <span className="ml-2 font-normal text-stone2">· {a.duration}</span>}
+                    </p>
+                    {a.notes && <p className="mt-0.5 text-xs text-stone2">{a.notes}</p>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setEditing(a)} className="btn-ghost px-3 py-1.5 text-xs">
+                      Edit
+                    </button>
+                    <form action={deleteAppointment}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <button className="btn-ghost px-3 py-1.5 text-xs text-red-700">Delete</button>
+                    </form>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {addingFor && <AppointmentForm mode="add" date={addingFor} onClose={() => setAddingFor(null)} />}
+      {editing && <AppointmentForm mode="edit" appointment={editing} onClose={() => setEditing(null)} />}
     </div>
   );
 }
 
-function AddAppointmentForm({ date, onClose }: { date: string; onClose: () => void }) {
+function AppointmentForm(
+  props:
+    | { mode: "add"; date: string; onClose: () => void }
+    | { mode: "edit"; appointment: Appointment; onClose: () => void }
+) {
+  const { mode, onClose } = props;
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function submit(formData: FormData) {
     setError(null);
     startTransition(async () => {
-      const result = await createAppointment(null, formData);
+      const result =
+        mode === "add" ? await createAppointment(null, formData) : await updateAppointment(null, formData);
       if (result?.error) setError(result.error);
       else onClose();
     });
   }
 
+  const defaults =
+    mode === "edit"
+      ? {
+          id: props.appointment.id,
+          clientName: props.appointment.clientName,
+          date: props.appointment.date,
+          time: props.appointment.time ?? "",
+          duration: props.appointment.duration ?? "",
+          notes: props.appointment.notes ?? "",
+        }
+      : { id: "", clientName: "", date: props.date, time: "", duration: "", notes: "" };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
-      <form
-        action={submit}
-        onClick={(e) => e.stopPropagation()}
-        className="card grid w-full max-w-sm gap-3 p-5"
-      >
-        <h3 className="font-display text-lg font-semibold">Add Appointment</h3>
+      <form action={submit} onClick={(e) => e.stopPropagation()} className="card grid w-full max-w-sm gap-3 p-5">
+        <h3 className="font-display text-lg font-semibold">{mode === "add" ? "Add Appointment" : "Edit Appointment"}</h3>
+        {mode === "edit" && <input type="hidden" name="id" value={defaults.id} />}
         <div>
           <label className="label" htmlFor="apptClientName">Client Name</label>
-          <input id="apptClientName" name="clientName" required className="field" />
+          <input id="apptClientName" name="clientName" required defaultValue={defaults.clientName} className="field" />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label" htmlFor="apptDate">Date</label>
-            <input id="apptDate" name="date" type="date" defaultValue={date} required className="field" />
+            <input id="apptDate" name="date" type="date" defaultValue={defaults.date} required className="field" />
           </div>
           <div>
             <label className="label" htmlFor="apptTime">Time</label>
-            <input id="apptTime" name="time" type="time" className="field" />
+            <input id="apptTime" name="time" type="time" defaultValue={defaults.time} className="field" />
           </div>
         </div>
         <div>
           <label className="label" htmlFor="apptDuration">Duration</label>
-          <select id="apptDuration" name="duration" className="field">
+          <select id="apptDuration" name="duration" defaultValue={defaults.duration} className="field">
             <option value="">Not Set</option>
             {DURATION_OPTIONS.map((d) => (
               <option key={d} value={d}>{d}</option>
@@ -195,12 +259,12 @@ function AddAppointmentForm({ date, onClose }: { date: string; onClose: () => vo
         </div>
         <div>
           <label className="label" htmlFor="apptNotes">Notes (Optional)</label>
-          <textarea id="apptNotes" name="notes" rows={2} className="field" />
+          <textarea id="apptNotes" name="notes" rows={2} defaultValue={defaults.notes} className="field" />
         </div>
         {error && <p className="text-xs text-red-700">{error}</p>}
         <div className="flex gap-2">
           <button disabled={pending} className="btn-primary flex-1 disabled:opacity-50">
-            {pending ? "Adding…" : "Add To Calendar"}
+            {pending ? "Saving…" : mode === "add" ? "Add To Calendar" : "Save Changes"}
           </button>
           <button type="button" onClick={onClose} className="btn-ghost">Cancel</button>
         </div>

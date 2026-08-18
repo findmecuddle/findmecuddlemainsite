@@ -571,6 +571,10 @@ export const inquiries = sqliteTable(
     duration: text("duration"), // one of DURATION_OPTIONS' labels, or null
     flexible: integer("flexible", { mode: "boolean" }).notNull().default(false),
     readAt: integer("read_at", { mode: "timestamp_ms" }),
+    // "pending" (default) | "accepted" (see acceptInquiryAsAppointment — set automatically when
+    // turned into a calendar entry) | "denied" (see denyInquiry). Purely organizational for the
+    // cuddler's own inbox tabs (see MessagesCard.tsx) — a client never sees this status.
+    status: text("status").notNull().default("pending"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
       .$defaultFn(() => new Date()),
