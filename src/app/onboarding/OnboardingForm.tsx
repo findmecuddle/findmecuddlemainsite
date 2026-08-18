@@ -31,6 +31,17 @@ export default function OnboardingForm() {
           <label className="label" htmlFor="location">Where You Cuddle</label>
           <input id="location" name="location" required className="field" placeholder="Zip code or City, ST" />
         </div>
+        <div>
+          <label className="label" htmlFor="referredBy">
+            Referred By <span className="normal-case">(Optional)</span>
+          </label>
+          <input
+            id="referredBy"
+            name="referredBy"
+            className="field"
+            placeholder="Name of the person who referred you"
+          />
+        </div>
       </div>
       <div className="grid gap-3 border-t border-line pt-5">
         <label className="flex items-start gap-2.5 text-sm text-stone2">

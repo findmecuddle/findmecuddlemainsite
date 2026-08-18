@@ -14,6 +14,7 @@ type CuddlerRow = {
   published: boolean;
   suspendedAt: Date | null;
   suspensionNote: string | null;
+  referredBy?: string | null;
 };
 
 const STATUS_FILTERS = [
@@ -98,6 +99,7 @@ export default async function AdminCuddlersPage(
                   <p className="mt-0.5 text-xs text-stone2">
                     {t.email} · Plan: {t.subStatus} · ID Check: {t.identityStatus}
                     {" · "}Joined {t.createdAt.toLocaleDateString()}
+                    {t.referredBy && <> · Referred By: {t.referredBy}</>}
                   </p>
                 </div>
                 <Link href={`/admin/cuddlers/${t.id}/edit`} className="btn-ghost text-sm">

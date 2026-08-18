@@ -11,6 +11,7 @@ import {
   adminDeleteReview,
   manualFlagPhoto,
   undoCardCrop,
+  adminUpdateReferredBy,
 } from "@/app/admin/actions";
 import { getHours } from "@/app/actions";
 import { toClientSafeCuddler } from "@/lib/auth";
@@ -86,6 +87,19 @@ export default async function AdminEditCuddlerPage(props: { params: Promise<{ id
         <div>
           <p className="text-xs text-stone2">Member Since</p>
           <p className="font-medium">{t.createdAt.toLocaleDateString()}</p>
+        </div>
+        <div>
+          <p className="text-xs text-stone2">Referred By</p>
+          <form action={adminUpdateReferredBy.bind(null, id)} className="mt-1 flex items-center gap-1.5">
+            <input
+              type="text"
+              name="referredBy"
+              defaultValue={t.referredBy ?? ""}
+              placeholder="None"
+              className="field !py-1 text-sm"
+            />
+            <button className="btn-ghost text-xs">Save</button>
+          </form>
         </div>
       </div>
 

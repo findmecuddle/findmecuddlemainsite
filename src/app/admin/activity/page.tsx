@@ -18,6 +18,7 @@ const ACTION_LABELS: Record<string, string> = {
   remove_admin: "Removed a team member",
   admin_edit_listing: "Edited a cuddler's listing",
   admin_edit_hours: "Edited a cuddler's hours",
+  admin_edit_referred_by: "Edited a cuddler's referral source",
   override_identity_verified: "Manually verified identity check",
   reset_identity_verification: "Reset identity check",
 };

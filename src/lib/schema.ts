@@ -281,6 +281,11 @@ export const cuddlers = sqliteTable(
     marketingOptIn: integer("marketing_opt_in", { mode: "boolean" }).notNull().default(false),
     marketingOptInAt: integer("marketing_opt_in_at", { mode: "timestamp_ms" }),
 
+    // Free-text "who referred you" entered at signup (optional) — used for tracking referral
+    // payouts, see /admin/referrals for the grouped summary. Admin can also edit this later from
+    // the cuddler's edit page to fix a typo/spelling so referrals group together correctly.
+    referredBy: text("referred_by"),
+
     // Set once, the first time this listing ever satisfies isLive() (published + active sub +
     // verified + not paused/suspended) — see checkGoLive() in lib/activity.ts. Purely a one-shot
     // flag so a "go_live" system event only gets logged the first time, not on every later read;

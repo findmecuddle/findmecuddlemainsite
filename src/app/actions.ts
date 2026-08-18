@@ -68,6 +68,7 @@ export async function completeOnboarding(
   const [state, zipMaybe] = (stateZip || "").split(/\s+/);
 
   const marketingOptIn = formData.get("marketingOptIn") === "on";
+  const referredBy = String(formData.get("referredBy") || "").trim() || null;
   // Chosen once here and never changed after — see accountType's comment in schema.ts. Anything
   // other than the literal "agency" value is treated as "solo", so a tampered/missing field can't
   // accidentally create a agency account.
@@ -96,6 +97,7 @@ export async function completeOnboarding(
       lng: loc.lng,
       marketingOptIn,
       marketingOptInAt: marketingOptIn ? new Date() : null,
+      referredBy,
     })
     .returning({ id: cuddlers.id });
 

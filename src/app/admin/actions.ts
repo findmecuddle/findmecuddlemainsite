@@ -640,6 +640,7 @@ export async function allCuddlers() {
       suspendedAt: cuddlers.suspendedAt,
       wentLiveAt: cuddlers.wentLiveAt,
       createdAt: cuddlers.createdAt,
+      referredBy: cuddlers.referredBy,
     })
     .from(cuddlers)
     .orderBy(desc(cuddlers.createdAt));
@@ -722,6 +723,30 @@ export async function adminUpdateHours(cuddlerId: string, _prev: unknown, formDa
   await logAction(admin, "admin_edit_hours", { targetType: "cuddler", targetId: cuddlerId, detail: existing.name });
   revalidatePath(`/admin/cuddlers/${cuddlerId}/edit`);
   return result;
+}
+
+// Quick inline edit for the "Referred By" field on the admin edit page — lets an admin fix a
+// misspelled or inconsistent referrer name after the fact so the /admin/referrals summary groups
+// it correctly (that page groups by exact string match, case-insensitive).
+export async function adminUpdateReferredBy(cuddlerId: string, formData: FormData) {
+  const admin = await requireAdmin();
+  const [existing] = await db
+    .select({ name: cuddlers.name })
+    .from(cuddlers)
+    .where(eq(cuddlers.id, cuddlerId))
+    .limit(1);
+  if (!existing) return;
+
+  const referredBy = String(formData.get("referredBy") || "").trim() || null;
+  await db.update(cuddlers).set({ referredBy }).where(eq(cuddlers.id, cuddlerId));
+  await logAction(admin, "admin_edit_referred_by", {
+    targetType: "cuddler",
+    targetId: cuddlerId,
+    detail: `${existing.name}: ${referredBy ?? "(cleared)"}`,
+  });
+  revalidatePath(`/admin/cuddlers/${cuddlerId}/edit`);
+  revalidatePath("/admin/cuddlers");
+  revalidatePath("/admin/referrals");
 }
 
 // ---------- Manual Stripe Identity override ----------
@@ -851,6 +876,50 @@ export async function recentActivity(limit = 100) {
 export async function recentSystemEvents(limit = 100) {
   await requireAdmin();
   return db.select().from(systemEvents).orderBy(desc(systemEvents.createdAt)).limit(limit);
+}
+
+// ---------- Referral payouts ----------
+// Grouped view of the free-text "Referred By" field collected at signup (see completeOnboarding in
+// app/actions.ts) and editable per-account above — lets an admin tally up, at the end of the month,
+// how many paying cuddlers each referrer brought in without having to scroll the full account list.
+// Groups case-insensitively/trimmed so "Jane" and "jane " land in the same bucket; the display name
+// shown is whichever spelling was entered first alphabetically, purely for a stable, readable label.
+
+export async function referralSummary() {
+  await requireAdmin();
+  const rows = await db
+    .select({
+      id: cuddlers.id,
+      name: cuddlers.name,
+      slug: cuddlers.slug,
+      subStatus: cuddlers.subStatus,
+      referredBy: cuddlers.referredBy,
+      createdAt: cuddlers.createdAt,
+    })
+    .from(cuddlers)
+    .where(isNotNull(cuddlers.referredBy))
+    .orderBy(desc(cuddlers.createdAt));
+
+  const groups = new Map<
+    string,
+    { label: string; referred: typeof rows; payingCount: number }
+  >();
+
+  for (const r of rows) {
+    const key = (r.referredBy ?? "").trim().toLowerCase();
+    if (!key) continue;
+    const existing = groups.get(key);
+    const paying = r.subStatus === "active";
+    if (existing) {
+      existing.referred.push(r);
+      if (paying) existing.payingCount++;
+      if (r.referredBy!.trim() < existing.label) existing.label = r.referredBy!.trim();
+    } else {
+      groups.set(key, { label: r.referredBy!.trim(), referred: [r], payingCount: paying ? 1 : 0 });
+    }
+  }
+
+  return Array.from(groups.values()).sort((a, b) => b.referred.length - a.referred.length);
 }
 
 // ---------- Newsletter subscribers ----------
