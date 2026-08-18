@@ -95,7 +95,8 @@ export async function sendInquiryEmail(opts: {
   clientEmail: string | null;
   message: string | null;
   cuddleType?: string | null;
-  locationType?: "incall" | "outcall" | null;
+  /** "incall" | "outcall" | "incall,outcall" (client selected both) | null */
+  locationType?: string | null;
   preferredDate?: string | null;
   preferredTime?: string | null;
   duration?: string | null;
@@ -121,7 +122,17 @@ export async function sendInquiryEmail(opts: {
     siteName,
   } = opts;
   const subject = `New inquiry from ${clientName} — ${siteName}`;
-  const locationLabel = locationType === "incall" ? "In-Studio (at their place)" : locationType === "outcall" ? "Outcall (at client's place)" : null;
+  const LOCATION_TYPE_LABELS: Record<string, string> = {
+    incall: "In-Studio (at their place)",
+    outcall: "Outcall (at client's place)",
+  };
+  const locationLabel = locationType
+    ? locationType
+        .split(",")
+        .map((v) => LOCATION_TYPE_LABELS[v])
+        .filter(Boolean)
+        .join(" or ") || null
+    : null;
   const whenLabel = flexible
     ? "Whenever you're open"
     : [preferredDate, preferredTime].filter(Boolean).join(" at ") || null;

@@ -273,7 +273,7 @@ function MiniProfileGrid({
               {openNowById.get(t.id) && (
                 <span className="badge-pill absolute right-1.5 top-1.5 bg-emerald-50 text-emerald-700 shadow-sm">
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-                  Open Now
+                  Available Now
                 </span>
               )}
             </div>

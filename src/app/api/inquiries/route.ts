@@ -27,8 +27,14 @@ export async function POST(req: NextRequest) {
   const clientEmail = String(form.get("email") || "").trim() || null;
   const message = String(form.get("message") || "").trim().slice(0, INQUIRY_MESSAGE_MAX_CHARS) || null;
   const cuddleType = String(form.get("cuddleType") || "").trim() || null;
-  const rawLocationType = String(form.get("locationType") || "");
-  const locationType = rawLocationType === "incall" || rawLocationType === "outcall" ? rawLocationType : null;
+  // Checkboxes now (was a single radio) — a client can select both if the cuddler offers both
+  // hosting and mobile (see the hosts/mobile filter in SendInfoForm.tsx). Stored as a
+  // comma-joined string ("incall,outcall") since locationType is a single text column; see
+  // locationLabel in lib/email.ts and LOCATION_LABEL in MessagesCard.tsx for how it's split back
+  // out for display.
+  const rawLocationTypes = form.getAll("locationType").map((v) => String(v));
+  const validLocationTypes = rawLocationTypes.filter((v) => v === "incall" || v === "outcall");
+  const locationType = validLocationTypes.length > 0 ? validLocationTypes.join(",") : null;
   const rawDuration = String(form.get("duration") || "").trim();
   const duration = DURATION_OPTIONS.includes(rawDuration) ? rawDuration : null;
   const flexible = String(form.get("flexible") || "") === "on";

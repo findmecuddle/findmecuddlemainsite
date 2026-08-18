@@ -214,7 +214,10 @@ function MessageRow({
               {unread && <span className="badge-pill bg-spruce text-white">New</span>}
               {inquiry.locationType && (
                 <span className="badge-pill border border-line bg-white text-ink">
-                  {LOCATION_LABEL[inquiry.locationType] ?? inquiry.locationType}
+                  {inquiry.locationType
+                    .split(",")
+                    .map((v) => LOCATION_LABEL[v] ?? v)
+                    .join(" or ")}
                 </span>
               )}
             </div>

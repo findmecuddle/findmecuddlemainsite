@@ -41,10 +41,10 @@ const CLIENT_FAQS: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
-    q: 'What does the "Open Now" badge mean, and what if I can\'t reach someone during their posted hours?',
+    q: 'What does the "Available Now" badge mean, and what if I can\'t reach someone during their posted hours?',
     a: (
       <>
-        Cuddlers can optionally list weekly hours, and "Open Now" reflects whether it's
+        Cuddlers can optionally list weekly hours, and "Available Now" reflects whether it's
         currently within those hours in the cuddler's own time zone. Some cuddlers choose to
         only take calls/texts during those hours (outside them, you'll see email or "Send My Info"
         instead). That's a setting they control, not a guarantee of an instant response either

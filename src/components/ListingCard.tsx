@@ -91,7 +91,7 @@ export default function ListingCard({
           {openNow && (
             <span className="badge-pill bg-emerald-50 text-emerald-700">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
-              Open Now
+              Available Now
             </span>
           )}
           {isNew && (

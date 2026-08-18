@@ -12,12 +12,27 @@ import Turnstile from "@/components/Turnstile";
  * saved to their dashboard message list, and any follow-up happens off-platform — a normal reply,
  * call, or text, same as every other contact method on the site.
  */
-export default function SendInfoForm({ cuddlerId, cuddlerFirstName }: { cuddlerId: string; cuddlerFirstName: string }) {
+export default function SendInfoForm({
+  cuddlerId,
+  cuddlerFirstName,
+  hosts,
+  mobile,
+}: {
+  cuddlerId: string;
+  cuddlerFirstName: string;
+  /** Only show a location-type option the cuddler actually offers — see the two-checkbox toggle
+   *  on their listing form. If they offer both, a client can check both (open to either). */
+  hosts: boolean;
+  mobile: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [flexible, setFlexible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ error?: string; ok?: boolean } | null>(null);
+  const locationOptions = LOCATION_TYPE_OPTIONS.filter(
+    (opt) => (opt.value === "incall" && hosts) || (opt.value === "outcall" && mobile)
+  );
 
   if (!open) {
     return (
@@ -88,14 +103,19 @@ export default function SendInfoForm({ cuddlerId, cuddlerFirstName }: { cuddlerI
             ))}
           </select>
         </div>
-        <div className="flex gap-4">
-          {LOCATION_TYPE_OPTIONS.map((opt) => (
-            <label key={opt.value} className="flex items-center gap-1.5 text-sm text-ink">
-              <input type="radio" name="locationType" value={opt.value} className="h-4 w-4 accent-spruce" />
-              {opt.label}
-            </label>
-          ))}
-        </div>
+        {locationOptions.length > 0 && (
+          <div className="flex gap-4">
+            {locationOptions.map((opt) => (
+              <label key={opt.value} className="flex items-center gap-1.5 text-sm text-ink">
+                <input type="checkbox" name="locationType" value={opt.value} className="h-4 w-4 accent-spruce" />
+                {opt.label}
+              </label>
+            ))}
+            {locationOptions.length > 1 && (
+              <span className="text-xs text-stone2 self-center">Check both if either works for you.</span>
+            )}
+          </div>
+        )}
         <div>
           <label className="flex items-center gap-2 text-sm text-ink">
             <input
