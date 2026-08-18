@@ -18,6 +18,8 @@ export default function ReviewForm({
   const [sessionType, setSessionType] = useState<"studio" | "mobile">("studio");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ error?: string; ok?: boolean } | null>(null);
+  const [authorEmail, setAuthorEmail] = useState("");
+  const [authorPhone, setAuthorPhone] = useState("");
 
   if (!open) {
     return (
@@ -37,6 +39,10 @@ export default function ReviewForm({
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!authorEmail.trim() && !authorPhone.trim()) {
+      setResult({ error: "Enter your email or phone number so we can verify you booked a session." });
+      return;
+    }
     setBusy(true);
     setResult(null);
     const formData = new FormData(e.currentTarget);
@@ -55,16 +61,37 @@ export default function ReviewForm({
 
   return (
     <form onSubmit={submit} className="mt-3 grid gap-3 border-t border-line pt-4">
+      <div>
+        <label className="label" htmlFor="authorName">Your name</label>
+        <input id="authorName" name="authorName" required className="field" />
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="label" htmlFor="authorName">Your name</label>
-          <input id="authorName" name="authorName" required className="field" />
+          <label className="label" htmlFor="authorEmail">Email (not shown publicly)</label>
+          <input
+            id="authorEmail"
+            name="authorEmail"
+            type="email"
+            value={authorEmail}
+            onChange={(e) => setAuthorEmail(e.target.value)}
+            className="field"
+          />
         </div>
         <div>
-          <label className="label" htmlFor="authorEmail">Email (not shown publicly)</label>
-          <input id="authorEmail" name="authorEmail" type="email" className="field" />
+          <label className="label" htmlFor="authorPhone">Phone (not shown publicly)</label>
+          <input
+            id="authorPhone"
+            name="authorPhone"
+            type="tel"
+            value={authorPhone}
+            onChange={(e) => setAuthorPhone(e.target.value)}
+            className="field"
+          />
         </div>
       </div>
+      <p className="-mt-1 text-xs text-stone2">
+        Enter at least one — we use it to confirm you actually booked with this cuddler. Never shown publicly.
+      </p>
       {mobileOffered && (
         <div>
           <label className="label">Was this session in-studio or mobile?</label>

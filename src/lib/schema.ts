@@ -411,10 +411,17 @@ export const reviews = sqliteTable(
       .references(() => cuddlers.id, { onDelete: "cascade" }),
     authorName: text("author_name").notNull(),
     authorEmail: text("author_email"), // private — for follow-up only, never shown publicly
+    authorPhone: text("author_phone"), // private — for follow-up only, never shown publicly
     rating: integer("rating").notNull(), // 1-5
     body: text("body").notNull(),
     sessionType: text("session_type"), // "studio" | "mobile" | null (reviewer didn't say)
     status: text("status").notNull().default("pending"), // pending | approved | denied
+    // Set once at submission time by matching the reviewer's normalized phone/email (see
+    // lib/phone.ts) against that same cuddler's own inquiries — true means they actually sent a
+    // "Send My Info" request to this cuddler before, false means no match was found (doesn't
+    // block the review, just flags it "Unverified" in the admin queue for a closer look; see
+    // pendingReviews() in admin/actions.ts).
+    verifiedContact: integer("verified_contact", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
       .$defaultFn(() => new Date()),

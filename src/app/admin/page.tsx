@@ -267,15 +267,26 @@ export default async function AdminPage() {
             {reviewQueue.map((r) => (
               <li key={r.id} className="card p-5">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <Link href={`/cuddlers/${r.cuddlerSlug}`} className="font-medium text-spruce hover:underline">
-                    {r.cuddlerName}
-                  </Link>
+                  <span className="flex items-center gap-2">
+                    <Link href={`/cuddlers/${r.cuddlerSlug}`} className="font-medium text-spruce hover:underline">
+                      {r.cuddlerName}
+                    </Link>
+                    {!r.verifiedContact && (
+                      <span
+                        className="badge-pill border border-amber-300 bg-amber-50 text-amber-800"
+                        title="This reviewer's phone/email doesn't match any inquiry on file for this cuddler."
+                      >
+                        Unverified
+                      </span>
+                    )}
+                  </span>
                   <span className="text-xs text-stone2">{r.createdAt.toLocaleString()}</span>
                 </div>
                 <p className="mt-2 text-sm">
                   <span className="font-medium">{r.authorName}</span>{" "}
                   <span className="text-gold">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
                   {r.authorEmail && <span className="text-stone2"> · {r.authorEmail}</span>}
+                  {r.authorPhone && <span className="text-stone2"> · {r.authorPhone}</span>}
                 </p>
                 <p className="mt-2 whitespace-pre-line text-sm text-ink/90">{r.body}</p>
                 <div className="mt-4 flex gap-2">
@@ -388,9 +399,19 @@ export default async function AdminPage() {
               return (
                 <li key={r.id} className="card p-5">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <Link href={`/cuddlers/${r.cuddlerSlug}`} className="font-medium text-spruce hover:underline">
-                      {r.cuddlerName}
-                    </Link>
+                    <span className="flex items-center gap-2">
+                      <Link href={`/cuddlers/${r.cuddlerSlug}`} className="font-medium text-spruce hover:underline">
+                        {r.cuddlerName}
+                      </Link>
+                      {!r.verifiedContact && (
+                        <span
+                          className="badge-pill border border-amber-300 bg-amber-50 text-amber-800"
+                          title="This reviewer's phone/email doesn't match any inquiry on file for this cuddler."
+                        >
+                          Unverified
+                        </span>
+                      )}
+                    </span>
                     <span className="flex items-center gap-2 text-xs text-stone2">
                       <span className={`font-medium capitalize ${statusStyle}`}>{r.status}</span>
                       {r.createdAt.toLocaleString()}
@@ -400,6 +421,7 @@ export default async function AdminPage() {
                     <span className="font-medium">{r.authorName}</span>{" "}
                     <span className="text-gold">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
                     {r.authorEmail && <span className="text-stone2"> · {r.authorEmail}</span>}
+                    {r.authorPhone && <span className="text-stone2"> · {r.authorPhone}</span>}
                   </p>
                   <p className="mt-2 whitespace-pre-line text-sm text-ink/90">{r.body}</p>
                   <form action={adminDeleteReview} className="mt-3">

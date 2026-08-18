@@ -11,13 +11,25 @@ import {
   acceptInquiryAsAppointment,
   denyInquiry,
   resetInquiryStatus,
+  updateAppointment,
   type listInquiries,
   type listMyReports,
+  type listAppointments,
 } from "@/app/actions";
 import { REPORT_REASONS, FLAG_REASON_MAX_CHARS, SUPPORT_EMAIL } from "@/lib/config";
 
 type Inquiry = Awaited<ReturnType<typeof listInquiries>>[number];
 type MyReport = Awaited<ReturnType<typeof listMyReports>>[number];
+type Appointment = Awaited<ReturnType<typeof listAppointments>>[number];
+
+function formatTime12(hm: string | null): string | null {
+  if (!hm) return null;
+  const [h, m] = hm.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
 
 const LOCATION_LABEL: Record<string, string> = {
   incall: "In-Studio",
@@ -37,11 +49,27 @@ const STATUS_TABS = [
 ] as const;
 type StatusTab = (typeof STATUS_TABS)[number]["key"];
 
-export default function MessagesCard({ inquiries, myReports }: { inquiries: Inquiry[]; myReports: MyReport[] }) {
+export default function MessagesCard({
+  inquiries,
+  myReports,
+  appointments,
+}: {
+  inquiries: Inquiry[];
+  myReports: MyReport[];
+  appointments: Appointment[];
+}) {
   const unreadCount = inquiries.filter((i) => !i.readAt).length;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [tab, setTab] = useState<StatusTab>("pending");
+
+  // Most recent appointment per source inquiry (there's normally only ever one, but "most
+  // recent" is a harmless tiebreaker if a message was ever accepted more than once) — lets an
+  // Accepted row show/edit its scheduled time without leaving the inbox for the calendar.
+  const appointmentByInquiryId = new Map<string, Appointment>();
+  for (const a of appointments) {
+    if (a.sourceInquiryId) appointmentByInquiryId.set(a.sourceInquiryId, a);
+  }
 
   // Anything without an explicit status (shouldn't happen post-migration, but defensive for any
   // row that predates the status column) counts as pending, same as the DB column's own default.
@@ -203,6 +231,7 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
             <MessageRow
               key={inq.id}
               inquiry={inq}
+              appointment={appointmentByInquiryId.get(inq.id) ?? null}
               checked={selected.has(inq.id)}
               onToggle={() => toggle(inq.id)}
               onDelete={() => deleteMessages([inq.id])}
@@ -257,12 +286,14 @@ function MyReports({ reports }: { reports: MyReport[] }) {
 
 function MessageRow({
   inquiry,
+  appointment,
   checked,
   onToggle,
   onDelete,
   onDeny,
 }: {
   inquiry: Inquiry;
+  appointment: Appointment | null;
   checked: boolean;
   onToggle: () => void;
   onDelete: () => void;
@@ -354,6 +385,15 @@ function MessageRow({
             </button>
           </>
         )}
+        {status === "accepted" && appointment && (
+          <>
+            <span className="text-xs text-stone2">
+              Scheduled: {new Date(`${appointment.date}T00:00:00`).toLocaleDateString()}
+              {formatTime12(appointment.time) && ` at ${formatTime12(appointment.time)}`}
+            </span>
+            <EditApptTimeButton appointment={appointment} />
+          </>
+        )}
         {status !== "pending" && (
           <form action={resetInquiryStatus}>
             <input type="hidden" name="id" value={inquiry.id} />
@@ -362,6 +402,54 @@ function MessageRow({
         )}
       </div>
     </li>
+  );
+}
+
+/** Lets a cuddler adjust the date/time of an already-accepted booking right from the inbox, no
+ *  need to open the calendar just to fix a time (see the contact-info-on-the-calendar-card
+ *  precedent — same "don't make them go back and forth" goal, just the other direction). Reuses
+ *  updateAppointment with the appointment's existing name/phone/email/duration/notes carried
+ *  along untouched, since only date/time are editable here. */
+function EditApptTimeButton({ appointment }: { appointment: Appointment }) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="btn-ghost px-3 py-1.5 text-xs">
+        Edit Time
+      </button>
+    );
+  }
+
+  function submit(formData: FormData) {
+    setError(null);
+    formData.set("id", appointment.id);
+    formData.set("clientName", appointment.clientName);
+    if (appointment.clientPhone) formData.set("clientPhone", appointment.clientPhone);
+    if (appointment.clientEmail) formData.set("clientEmail", appointment.clientEmail);
+    if (appointment.duration) formData.set("duration", appointment.duration);
+    if (appointment.notes) formData.set("notes", appointment.notes);
+    startTransition(async () => {
+      const result = await updateAppointment(null, formData);
+      if (result?.error) setError(result.error);
+      else setOpen(false);
+    });
+  }
+
+  return (
+    <form action={submit} className="mt-2 flex w-full flex-wrap items-center gap-2 rounded-lg bg-porcelain p-2">
+      <input type="date" name="date" defaultValue={appointment.date} required className="field text-xs" />
+      <input type="time" name="time" defaultValue={appointment.time ?? ""} className="field text-xs" />
+      <button disabled={pending} className="btn-primary px-3 py-1.5 text-xs disabled:opacity-50">
+        {pending ? "Saving…" : "Save"}
+      </button>
+      <button type="button" onClick={() => setOpen(false)} className="btn-ghost px-3 py-1.5 text-xs">
+        Cancel
+      </button>
+      {error && <p className="w-full text-xs text-red-700">{error}</p>}
+    </form>
   );
 }
 

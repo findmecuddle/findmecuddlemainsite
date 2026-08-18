@@ -718,7 +718,12 @@ export async function denyInquiry(formData: FormData) {
   if (ownIds.length === 0) return;
 
   await db.update(inquiries).set({ status: "denied", readAt: new Date() }).where(inArray(inquiries.id, ownIds));
+  // A denied message might already have a calendar entry behind it (accepted, then moved back
+  // to pending, then denied) — clear those out too so a denied booking doesn't linger on the
+  // calendar. Scoped to this cuddler's own appointments via the inquiry ownership check above.
+  await db.delete(appointments).where(inArray(appointments.sourceInquiryId, ownIds));
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/calendar");
 }
 
 /** Moves a message back to Pending — an undo for an accidental Deny (or Accept, though accepting

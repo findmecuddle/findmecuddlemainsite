@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SignOutButton } from "@clerk/nextjs";
 import { currentCuddler, currentClerkUserId, toClientSafeCuddler } from "@/lib/auth";
-import { recentLedger, getHours, listEmployees, listInquiries, listMyReports } from "@/app/actions";
+import { recentLedger, getHours, listEmployees, listInquiries, listMyReports, listAppointments } from "@/app/actions";
 import {
   PLANS,
   AGENCY_PLAN_KEYS,
@@ -66,6 +66,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
   const employees = agency ? await listEmployees(me.id) : [];
   const inquiries = await listInquiries(me.id);
   const myReports = await listMyReports();
+  const appointments = await listAppointments(me.id);
   // Solo accounts only ever see Weekly/Monthly/VIP; agency accounts only ever see Small/Large Agency —
   // accountType is fixed at signup (see OnboardingForm.tsx), so there's no case where both sets
   // should show at once.
@@ -133,8 +134,8 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
             </span>
           )}
         </TabLink>
-        <TabLink href="/dashboard?tab=privacy" active={activeTab === "privacy"}>Privacy</TabLink>
         <TabLink href="/dashboard/calendar" active={false}>My Calendar</TabLink>
+        <TabLink href="/dashboard?tab=privacy" active={activeTab === "privacy"}>Privacy</TabLink>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr,360px]">
@@ -148,7 +149,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
               <HoursForm hours={hours} gatekeepHours={me.gatekeepHours} />
             </>
           )}
-          {activeTab === "messages" && <MessagesCard inquiries={inquiries} myReports={myReports} />}
+          {activeTab === "messages" && (
+            <MessagesCard inquiries={inquiries} myReports={myReports} appointments={appointments} />
+          )}
           {activeTab === "privacy" && (
             <>
               <ChangePasswordForm />
@@ -182,7 +185,9 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
             )}
             {!live && !suspended && (
               <p className="mt-1 text-xs text-stone2">
-                {me.subStatus !== "active"
+                {me.subStatus === "past_due"
+                  ? "Your Last Payment Failed — Update Your Card Below To Go Live Again."
+                  : me.subStatus !== "active"
                   ? "Choose A Listing Plan Below To Go Live."
                   : me.identityStatus !== "verified"
                   ? "Complete The Quick Identity Check Below: Your Listing Can't Go Live Until It's Verified."
@@ -250,7 +255,28 @@ export default async function DashboardPage(props: { searchParams: Promise<{ tab
 
           <section id="listing-plan" className="card p-6">
             <h2 className="font-display text-lg font-semibold">{agency ? "Agency Plan" : "Listing Plan"}</h2>
-            {me.subStatus === "active" ? (
+            {me.subStatus === "past_due" ? (
+              // A real Stripe subscription still exists here — it just has an unpaid invoice
+              // (failed card, expired card, etc.), most commonly from a plan-switch's prorated
+              // charge failing (see the pending_if_incomplete comment in /api/checkout). Routing
+              // this into the "Subscribe" flow below would create a brand-new, SECOND
+              // subscription and double-bill them — Manage Subscription (the Stripe billing
+              // portal) is the only correct fix here: update the card and pay the open invoice.
+              <>
+                <div className="mt-2 rounded-lg bg-amber-50 p-3">
+                  <p className="text-xs font-medium text-amber-900">
+                    Your last payment didn't go through, so this listing is temporarily hidden from search.
+                  </p>
+                  <p className="mt-1 text-xs text-amber-900">
+                    You're still subscribed to <span className="font-semibold">{planLabel}</span> — update your
+                    card below and it'll go live again automatically once it's paid.
+                  </p>
+                </div>
+                <form action="/api/billing-portal" method="POST" className="mt-3">
+                  <button className="btn-primary w-full">Update Payment Method</button>
+                </form>
+              </>
+            ) : me.subStatus === "active" ? (
               <>
                 <p className="mt-2 text-sm">
                   You're subscribed to <span className="font-semibold text-spruce">{planLabel}</span>

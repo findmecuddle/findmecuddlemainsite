@@ -47,15 +47,28 @@ export async function POST(req: NextRequest) {
       const item = sub.items.data[0];
       if (item && item.price.id !== priceId) {
         try {
-          await stripe().subscriptions.update(me.stripeSubscriptionId, {
+          // payment_behavior: "pending_if_incomplete" is the critical piece here — WITHOUT it,
+          // Stripe's default behavior is to apply the plan/price switch immediately and THEN
+          // attempt to charge the prorated difference; if that charge fails (declined card,
+          // insufficient funds, etc.) the switch still goes through but the subscription's real
+          // status flips to "past_due", which takes an already-active, already-paying listing
+          // offline over an unrelated failed upgrade charge. With pending_if_incomplete, a failed
+          // charge leaves the subscription exactly as it was (still active, still on the old
+          // plan/price) and just parks the attempted change in a `pending_update` — nothing about
+          // their current listing changes. Confirmed via Stripe's docs on proration_behavior +
+          // payment_behavior interaction and pending updates.
+          const updated = await stripe().subscriptions.update(me.stripeSubscriptionId, {
             items: [{ id: item.id, price: priceId }],
             proration_behavior: "always_invoice",
+            payment_behavior: "pending_if_incomplete",
             metadata: { cuddlerId: me.id, plan: plan.key },
           });
+          // A non-null pending_update means the charge failed and the switch did NOT apply —
+          // surface that as a failure even though the API call itself succeeded.
+          if (updated.pending_update) {
+            return NextResponse.redirect(`${SITE_URL}/dashboard?checkout=plan_failed`, 303);
+          }
         } catch {
-          // Most likely cause: the prorated invoice failed to charge (e.g. the card on file was
-          // declined). subStatus/plan stay whatever they were before this attempt — nothing was
-          // left half-changed — so surface it distinctly rather than claiming success.
           return NextResponse.redirect(`${SITE_URL}/dashboard?checkout=plan_failed`, 303);
         }
       }

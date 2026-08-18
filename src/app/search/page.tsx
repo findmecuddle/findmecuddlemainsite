@@ -21,7 +21,7 @@ type Result = NearbyResult;
 
 export default async function SearchPage(
   props: {
-    searchParams: Promise<{ q?: string; radius?: string; page?: string; gender?: string }>;
+    searchParams: Promise<{ q?: string; radius?: string; page?: string; gender?: string; availableNow?: string }>;
   }
 ) {
   const searchParams = await props.searchParams;
@@ -29,9 +29,10 @@ export default async function SearchPage(
   const radius = Math.min(parseInt(searchParams.radius ?? "", 10) || DEFAULT_RADIUS_MILES, 250);
   const origin = q ? resolveLocation(q) : null;
   const gender = searchParams.gender === "male" || searchParams.gender === "female" ? searchParams.gender : null;
+  const availableNow = searchParams.availableNow === "1";
 
   let results: Result[] = [];
-  if (origin) results = await findNearbyCuddlers(origin, radius, [], false, false, gender);
+  if (origin) results = await findNearbyCuddlers(origin, radius, [], false, availableNow, gender);
 
   const primaryResults = results;
 
@@ -48,6 +49,7 @@ export default async function SearchPage(
     qs.set("q", q);
     qs.set("radius", String(radius));
     if (gender) qs.set("gender", gender);
+    if (availableNow) qs.set("availableNow", "1");
     if (target > 1) qs.set("page", String(target));
     return `/search?${qs.toString()}`;
   }
@@ -115,6 +117,11 @@ export default async function SearchPage(
             {gender && (
               <>
                 {" "}· <span className="font-medium text-ink">{gender}</span>
+              </>
+            )}
+            {availableNow && (
+              <>
+                {" "}· <span className="font-medium text-spruce">Available Now</span>
               </>
             )}
           </p>

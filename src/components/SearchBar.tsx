@@ -19,11 +19,13 @@ export default function SearchBar({
   const [q, setQ] = useState(params.get("q") ?? "");
   const [radius, setRadius] = useState(params.get("radius") ?? "25");
   const [gender, setGender] = useState(params.get("gender") ?? "");
+  const [availableNow, setAvailableNow] = useState(params.get("availableNow") === "1");
 
   function go() {
     if (!q.trim()) return;
     const qs = new URLSearchParams({ q: q.trim(), radius });
     if (gender) qs.set("gender", gender);
+    if (availableNow) qs.set("availableNow", "1");
     router.push(`/search?${qs.toString()}`);
   }
 
@@ -33,6 +35,17 @@ export default function SearchBar({
     if (q.trim()) {
       const qs = new URLSearchParams({ q: q.trim(), radius });
       if (next) qs.set("gender", next);
+      if (availableNow) qs.set("availableNow", "1");
+      router.push(`/search?${qs.toString()}`);
+    }
+  }
+
+  function applyAvailableNow(next: boolean) {
+    setAvailableNow(next);
+    if (q.trim()) {
+      const qs = new URLSearchParams({ q: q.trim(), radius });
+      if (gender) qs.set("gender", gender);
+      if (next) qs.set("availableNow", "1");
       router.push(`/search?${qs.toString()}`);
     }
   }
@@ -96,6 +109,20 @@ export default function SearchBar({
             </select>
             {chevron}
           </div>
+
+          <label
+            className={`flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm ${
+              availableNow ? "border-spruce bg-spruce-tint text-spruce" : "border-line bg-white text-stone2"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={availableNow}
+              onChange={(e) => applyAvailableNow(e.target.checked)}
+              className="h-3.5 w-3.5"
+            />
+            Available Now
+          </label>
         </div>
       )}
     </div>
