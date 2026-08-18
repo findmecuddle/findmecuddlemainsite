@@ -7,6 +7,7 @@ import { uploadPrivateObject } from "@/lib/storage";
 import { createId } from "@/lib/id";
 import { REPORT_BODY_MAX_CHARS, REPORT_MAX_PHOTOS, MAX_PHOTO_MB, PHOTO_MAX_DIMENSION } from "@/lib/config";
 import { verifyCaptcha } from "@/lib/captcha";
+import { rawFormatError } from "@/lib/photoValidation";
 
 // sharp needs the Node runtime, not edge.
 export const runtime = "nodejs";
@@ -49,6 +50,8 @@ export async function POST(req: NextRequest) {
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
+    const rawError = rawFormatError(file.name);
+    if (rawError) return NextResponse.json({ error: rawError }, { status: 400 });
     if (!file.type.startsWith("image/")) {
       return NextResponse.json({ error: "Evidence files must be images." }, { status: 400 });
     }

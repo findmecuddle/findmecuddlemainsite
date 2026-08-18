@@ -7,6 +7,7 @@ import { agencyEmployees, flaggedPhotos } from "@/lib/schema";
 import { currentCuddler } from "@/lib/auth";
 import { uploadObject, deleteObject, keyFromPublicUrl } from "@/lib/storage";
 import { MAX_PHOTO_MB, HD_MIN_WIDTH, HD_MIN_HEIGHT, PHOTO_MAX_DIMENSION } from "@/lib/config";
+import { rawFormatError } from "@/lib/photoValidation";
 
 // sharp needs the Node runtime, not edge — same as /api/photos.
 export const runtime = "nodejs";
@@ -38,6 +39,8 @@ export async function POST(req: NextRequest) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
   }
+  const rawError = rawFormatError(file.name);
+  if (rawError) return NextResponse.json({ error: rawError }, { status: 400 });
   if (!file.type.startsWith("image/")) {
     return NextResponse.json({ error: "File must be an image (JPEG, PNG, or WebP)." }, { status: 400 });
   }

@@ -8,6 +8,7 @@ import { currentAdmin } from "@/lib/adminAuth";
 import { uploadObject, deleteObject, keyFromPublicUrl } from "@/lib/storage";
 import { photoLimit } from "@/lib/stripe";
 import { VIP_MAX_PHOTOS, MAX_PHOTO_MB, HD_MIN_WIDTH, HD_MIN_HEIGHT, PHOTO_MAX_DIMENSION } from "@/lib/config";
+import { rawFormatError } from "@/lib/photoValidation";
 
 // sharp needs the Node runtime, not edge.
 export const runtime = "nodejs";
@@ -49,7 +50,9 @@ export async function POST(req: NextRequest) {
   let form: FormData;
   try {
     form = await req.formData();
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("Failed to parse admin photo upload form data:", err);
     return NextResponse.json({ error: "Invalid upload." }, { status: 400 });
   }
 
@@ -72,6 +75,8 @@ export async function POST(req: NextRequest) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
   }
+  const rawError = rawFormatError(file.name);
+  if (rawError) return NextResponse.json({ error: rawError }, { status: 400 });
   if (!file.type.startsWith("image/")) {
     return NextResponse.json({ error: "File must be an image (JPEG, PNG, or WebP)." }, { status: 400 });
   }
