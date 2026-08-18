@@ -112,7 +112,7 @@ export const SMS_TEMPLATE =
 // --- Photo uploads ---
 export const STANDARD_MAX_PHOTOS = 3;
 export const VIP_MAX_PHOTOS = 6; // Monthly VIP perk — see isVip()/photoLimit() in lib/stripe.ts
-export const MAX_PHOTO_MB = 8;
+export const MAX_PHOTO_MB = 48;
 // "HD" = 720p minimum on the shorter check dimension. Raise to 1920x1080 for a Full HD floor.
 export const HD_MIN_WIDTH = 1280;
 export const HD_MIN_HEIGHT = 720;

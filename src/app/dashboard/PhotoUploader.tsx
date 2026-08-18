@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import type { ClientSafeCuddler } from "@/lib/auth";
+import { MAX_PHOTO_MB } from "@/lib/config";
 
 type Slot = 1 | 2 | 3 | 4 | 5 | 6;
 const ALL_SLOTS: Slot[] = [1, 2, 3, 4, 5, 6];
@@ -248,7 +249,7 @@ export default function PhotoUploader({
         shown on cards and search results. Use Set As Profile Pic on any other photo to switch which one that is.
       </p>
       <p className="mt-2 text-xs text-stone2">
-        JPEG, PNG, or WebP · under 8MB · minimum 1280×720 resolution. Photos save immediately, no need to hit
+        JPEG, PNG, or WebP · under {MAX_PHOTO_MB}MB · minimum 1280×720 resolution. Photos save immediately, no need to hit
         "Save Changes" for these. Use real, current, professional photos of the cuddler. AI-generated or stock
         photos aren't allowed and may be removed (see Terms).
         {maxPhotos < 6 && " Monthly VIP unlocks up to 6 rotating photos."}
