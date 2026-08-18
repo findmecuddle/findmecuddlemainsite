@@ -120,6 +120,21 @@ export default function TermsPage() {
         </section>
 
         <section>
+          <h2 className="font-display text-xl font-semibold">Cuddler responsibility</h2>
+          <p className="mt-3">
+            {SITE_NAME} functions like a classified ads or online directory site: we give cuddlers a place to
+            advertise and give clients a way to find and contact them, and that's where our involvement ends. We
+            do not screen, background-check, or supervise clients, and we are not present for, or a party to,
+            any session. As a cuddler, you agree that {SITE_NAME} is not responsible or liable for anything a
+            client says, does, requests, or is alleged to have done, whether before, during, or after a session,
+            including during the session itself. This applies whether or not the client contacted you through
+            the site's messaging, "Send My Info," phone, text, or email, and whether or not you had reported
+            similar behavior about that client before. See "Assumption of risk" and "Indemnification" below for
+            how this applies more broadly.
+          </p>
+        </section>
+
+        <section>
           <h2 className="font-display text-xl font-semibold">Third-party links</h2>
           <p className="mt-3">
             A cuddler may add a link to their own personal or business website on their listing. We review

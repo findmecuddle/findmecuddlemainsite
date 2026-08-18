@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
   if (clientEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
   }
+  if (form.get("agreeToTerms") !== "on") {
+    return NextResponse.json({ error: "You must agree to the Terms of Service to send this." }, { status: 400 });
+  }
 
   if (!rateLimit(`inquiry:${cuddlerId}`, 10, 15 * 60_000)) {
     return NextResponse.json({ error: "Too many requests for this listing. Try again later." }, { status: 429 });

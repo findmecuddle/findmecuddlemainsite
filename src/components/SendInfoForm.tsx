@@ -131,19 +131,30 @@ export default function SendInfoForm({ cuddlerId, cuddlerFirstName }: { cuddlerI
         <p className="mt-1 text-right text-xs text-stone2">{message.length}/{INQUIRY_MESSAGE_MAX_CHARS}</p>
       </div>
 
+      <label className="flex items-start gap-2 border-t border-line pt-3 text-xs text-stone2">
+        <input
+          type="checkbox"
+          name="agreeToTerms"
+          required
+          className="mt-0.5 h-4 w-4 shrink-0 accent-spruce"
+        />
+        <span>
+          I agree to the{" "}
+          <Link href="/terms" target="_blank" className="font-medium text-spruce hover:underline">
+            Terms of Service
+          </Link>{" "}
+          and won't use this to contact {cuddlerFirstName} for anything illegal or prohibited under them.
+          {SITE_NAME} cooperates with law enforcement and will comply with valid subpoenas, court orders, and
+          other lawful requests for information, including the details of this message.
+        </span>
+      </label>
+
       <Turnstile />
       {result?.error && <p className="text-sm text-red-700">{result.error}</p>}
       <div className="flex gap-2">
         <button className="btn-primary" disabled={busy}>{busy ? "Sending…" : "Send My Info"}</button>
         <button type="button" className="btn-ghost" onClick={() => setOpen(false)} disabled={busy}>Cancel</button>
       </div>
-
-      <p className="border-t border-line pt-3 text-[11px] leading-relaxed text-stone2">
-        By sending this, you agree not to use this to contact {cuddlerFirstName} for anything illegal or
-        prohibited under our <Link href="/terms" target="_blank" className="underline hover:text-ink">Terms of
-        Service</Link>. {SITE_NAME} cooperates with law enforcement and will comply with valid subpoenas, court
-        orders, and other lawful requests for information, including the details of this message.
-      </p>
     </form>
   );
 }
