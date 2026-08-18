@@ -30,6 +30,7 @@ const SEVERITY_STYLE: Record<"yellow" | "red", string> = {
 };
 
 const STATUS_TABS = [
+  { key: "all", label: "All" },
   { key: "pending", label: "Pending" },
   { key: "accepted", label: "Accepted" },
   { key: "denied", label: "Denied" },
@@ -45,11 +46,12 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
   // Anything without an explicit status (shouldn't happen post-migration, but defensive for any
   // row that predates the status column) counts as pending, same as the DB column's own default.
   const counts = {
+    all: inquiries.length,
     pending: inquiries.filter((i) => (i.status ?? "pending") === "pending").length,
     accepted: inquiries.filter((i) => i.status === "accepted").length,
     denied: inquiries.filter((i) => i.status === "denied").length,
   };
-  const tabInquiries = inquiries.filter((i) => (i.status ?? "pending") === tab);
+  const tabInquiries = tab === "all" ? inquiries : inquiries.filter((i) => (i.status ?? "pending") === tab);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -155,7 +157,7 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
             >
               Mark All As Read
             </button>
-            {tab === "pending" && (
+            {(tab === "pending" || tab === "all") && (
               <button
                 type="button"
                 disabled={selected.size === 0 || isPending}
@@ -187,7 +189,13 @@ export default function MessagesCard({ inquiries, myReports }: { inquiries: Inqu
 
       {tabInquiries.length === 0 ? (
         <p className="mt-4 text-sm text-stone2">
-          {tab === "pending" ? "No pending messages." : tab === "accepted" ? "Nothing accepted yet." : "Nothing denied."}
+          {tab === "all"
+            ? "No messages yet."
+            : tab === "pending"
+            ? "No pending messages."
+            : tab === "accepted"
+            ? "Nothing accepted yet."
+            : "Nothing denied."}
         </p>
       ) : (
         <ul className="mt-4 grid gap-3">
