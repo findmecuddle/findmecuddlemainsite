@@ -16,7 +16,7 @@ import { RATE_CONTACT_LABEL, SMS_TEMPLATE, SITE_NAME, SITE_URL, WEEK_DAYS } from
 import { smsHref } from "@/lib/sms";
 import ReviewForm from "@/components/ReviewForm";
 import ReportForm from "@/components/ReportForm";
-import PhotoCarousel from "@/components/PhotoCarousel";
+import PhotoGallery from "@/components/PhotoGallery";
 import SendInfoForm from "@/components/SendInfoForm";
 import { socialIconFor } from "@/components/SocialIcons";
 
@@ -180,45 +180,14 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="grid gap-8 lg:grid-cols-[2fr,1fr]">
-        {/* min-w-0 is load-bearing here, not decorative — the photo row below is a horizontally
-            scrolling strip of fixed-width (w-64) tiles that's intentionally wider than the
+        {/* min-w-0 is load-bearing here, not decorative — the photo row inside PhotoGallery is a
+            horizontally scrolling strip of fixed-width tiles that's intentionally wider than the
             screen so it can scroll internally. Without min-w-0, a grid item's default min-width
             is "auto" (i.e. its content's intrinsic width), so this column refused to shrink
             below that ~780px+ content width and forced the ENTIRE page wider than the viewport
             on mobile instead of letting the photo row's own overflow-x-auto contain it. */}
         <div className="min-w-0">
-          {vip && photos.length > 1 ? (
-            // Monthly VIP perk: photos auto-rotate in a single fixed-size frame instead of a static row.
-            (<PhotoCarousel photos={photos} alt={t.name} />)
-          ) : (
-            photos.length > 0 && (
-              // Every photo displays in the same fixed-size square tile (object-cover fits/crops
-              // it visually to fill the frame) so photo galleries look consistent from one profile
-              // to the next, regardless of what aspect ratio each original upload happens to be.
-              // This is purely a display crop — the stored file itself is never touched, so nothing
-              // here can cause the kind of data loss the old crop tool did (see cardPhotoUrl in
-              // schema.ts). Row scrolls horizontally if photos don't all fit — on mobile the tile
-              // width is viewport-relative (not a fixed size) specifically so one photo nearly
-              // fills the screen with a deliberate peek of the next one poking in from the right,
-              // signaling "swipe for more" instead of the old fixed 256px tiles, which could just
-              // as easily read as a photo that got randomly cut off mid-frame.
-              (<div className="flex gap-2 overflow-x-auto pb-1">
-                {photos.map((p, i) => (
-                  <div
-                    key={p.url}
-                    className="aspect-square w-[78vw] max-w-80 shrink-0 overflow-hidden rounded-2xl bg-spruce-tint sm:h-80 sm:w-80"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={p.url}
-                      alt={`${t.name}, photo ${i + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>)
-            )
-          )}
+          <PhotoGallery photos={photos} alt={t.name} vip={vip} />
 
           <div className="mt-6 flex items-start gap-5">
             {photos.length === 0 && (
@@ -394,17 +363,17 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
             column already fixed, pushing the whole grid (and page) wider than the viewport
             again from the other side. */}
         <aside className="card h-fit min-w-0 p-6">
-          <h2 className="font-display text-lg font-semibold">Book A Session</h2>
+          <h2 className="font-display text-center text-lg font-semibold sm:text-left">Book A Session</h2>
           {!agencyAccount && (
             <ul className="mt-2 grid gap-1.5 text-sm">
-              <li className="flex justify-between gap-3">
+              <li className="flex justify-center gap-3 sm:justify-between">
                 <span className="text-stone2">In-Person, Per Hour</span>
                 <span className={`shrink-0 text-right ${t.hourlyRate != null ? "font-medium text-ink" : "text-stone2"}`}>
                   {t.hourlyRate != null ? `$${t.hourlyRate}` : RATE_CONTACT_LABEL}
                 </span>
               </li>
               {t.offersVirtual && (
-                <li className="flex justify-between gap-3">
+                <li className="flex justify-center gap-3 sm:justify-between">
                   <span className="text-stone2">Virtual, Per Hour</span>
                   <span
                     className={`shrink-0 text-right ${t.virtualHourlyRate != null ? "font-medium text-ink" : "text-stone2"}`}
@@ -415,9 +384,9 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
               )}
             </ul>
           )}
-          <p className="mt-3 text-sm text-stone2">{t.city}, {t.state} {t.zip}</p>
+          <p className="mt-3 text-center text-sm text-stone2 sm:text-left">{t.city}, {t.state} {t.zip}</p>
           {vip && t.city2 && (
-            <p className="mt-1 text-sm text-stone2">
+            <p className="mt-1 text-center text-sm text-stone2 sm:text-left">
               <span className="text-stone2">Also serving:</span> {t.city2}, {t.state2} {t.zip2}
             </p>
           )}
@@ -465,7 +434,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
 
           {hasHours && (
             <div className="mt-4 border-t border-line pt-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2 sm:justify-start">
                 <h3 className="text-sm font-semibold">Hours</h3>
                 {openNow ? (
                   <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
@@ -481,7 +450,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
               {/* Stacked (day above hours), not side-by-side — this sidebar column is narrow
                   enough that "Wednesday" next to "12:00 AM – 11:59 PM" has nowhere to go but a
                   cramped, gapless wrap. Stacking is a hair taller but reads cleanly at any width. */}
-              <ul className="mt-2 grid gap-2 text-sm">
+              <ul className="mt-2 grid gap-2 text-center text-sm sm:text-left">
                 {hours.map(({ day, label, blocks }) => (
                   <li key={day}>
                     <span className="font-medium text-ink">{label}</span>
@@ -499,7 +468,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
           )}
 
           {t.messagesOnly ? (
-            <p className="mt-4 rounded-lg bg-porcelain px-3 py-2 text-xs text-stone2">
+            <p className="mt-4 rounded-lg bg-porcelain px-3 py-2 text-center text-xs text-stone2 sm:text-left">
               {t.name.split(" ")[0]} only accepts messages through {SITE_NAME}. Every inquiry is
               automatically checked against reports from other cuddlers before it reaches them.
               Send your info below.
@@ -507,7 +476,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
           ) : ((t.acceptsCalls || t.acceptsTexts) && t.phone) || (t.acceptsEmail && t.contactEmail) ? (
             <div className="mt-4 grid gap-2">
               {contactLocked && (t.acceptsCalls || t.acceptsTexts) && t.phone && (
-                <p className="rounded-lg bg-porcelain px-3 py-2 text-xs text-stone2">
+                <p className="rounded-lg bg-porcelain px-3 py-2 text-center text-xs text-stone2 sm:text-left">
                   {t.name.split(" ")[0]} is currently outside business hours; call and text open
                   back up during the hours listed above. Email, or send your info below, in the meantime.
                 </p>
@@ -525,7 +494,7 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
               )}
             </div>
           ) : null}
-          <p className="mt-4 text-xs text-stone2">
+          <p className="mt-4 text-center text-xs text-stone2 sm:text-left">
             Contact {t.name.split(" ")[0]} directly to schedule. Rates and availability are set by the cuddler.
           </p>
 
