@@ -381,7 +381,12 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
           </div>
         </div>
 
-        <aside className="card h-fit p-6">
+        {/* min-w-0 here too — it's a sibling grid item of the main content column above, and
+            CSS Grid's default min-width:auto applies per-item independently, so this column
+            could refuse to shrink below its own content's natural width even with the main
+            column already fixed, pushing the whole grid (and page) wider than the viewport
+            again from the other side. */}
+        <aside className="card h-fit min-w-0 p-6">
           <h2 className="font-display text-lg font-semibold">Book A Session</h2>
           {!agencyAccount && (
             <ul className="mt-2 grid gap-1.5 text-sm">
