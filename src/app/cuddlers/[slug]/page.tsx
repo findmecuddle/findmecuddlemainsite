@@ -180,7 +180,13 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
       {/* eslint-disable-next-line react/no-danger */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="grid gap-8 lg:grid-cols-[2fr,1fr]">
-        <div>
+        {/* min-w-0 is load-bearing here, not decorative — the photo row below is a horizontally
+            scrolling strip of fixed-width (w-64) tiles that's intentionally wider than the
+            screen so it can scroll internally. Without min-w-0, a grid item's default min-width
+            is "auto" (i.e. its content's intrinsic width), so this column refused to shrink
+            below that ~780px+ content width and forced the ENTIRE page wider than the viewport
+            on mobile instead of letting the photo row's own overflow-x-auto contain it. */}
+        <div className="min-w-0">
           {vip && photos.length > 1 ? (
             // Monthly VIP perk: photos auto-rotate in a single fixed-size frame instead of a static row.
             (<PhotoCarousel photos={photos} alt={t.name} />)
