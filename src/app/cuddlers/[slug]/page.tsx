@@ -378,17 +378,19 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
         <aside className="card h-fit p-6">
           <h2 className="font-display text-lg font-semibold">Book A Session</h2>
           {!agencyAccount && (
-            <ul className="mt-2 grid gap-1 text-sm">
-              <li className="flex justify-between">
+            <ul className="mt-2 grid gap-1.5 text-sm">
+              <li className="flex justify-between gap-3">
                 <span className="text-stone2">In-Person, Per Hour</span>
-                <span className={t.hourlyRate != null ? "font-medium text-ink" : "text-stone2"}>
+                <span className={`shrink-0 text-right ${t.hourlyRate != null ? "font-medium text-ink" : "text-stone2"}`}>
                   {t.hourlyRate != null ? `$${t.hourlyRate}` : RATE_CONTACT_LABEL}
                 </span>
               </li>
               {t.offersVirtual && (
-                <li className="flex justify-between">
+                <li className="flex justify-between gap-3">
                   <span className="text-stone2">Virtual, Per Hour</span>
-                  <span className={t.virtualHourlyRate != null ? "font-medium text-ink" : "text-stone2"}>
+                  <span
+                    className={`shrink-0 text-right ${t.virtualHourlyRate != null ? "font-medium text-ink" : "text-stone2"}`}
+                  >
                     {t.virtualHourlyRate != null ? `$${t.virtualHourlyRate}` : RATE_CONTACT_LABEL}
                   </span>
                 </li>
@@ -458,11 +460,14 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
                   </span>
                 )}
               </div>
-              <ul className="mt-2 grid gap-1 text-sm">
+              {/* Stacked (day above hours), not side-by-side — this sidebar column is narrow
+                  enough that "Wednesday" next to "12:00 AM – 11:59 PM" has nowhere to go but a
+                  cramped, gapless wrap. Stacking is a hair taller but reads cleanly at any width. */}
+              <ul className="mt-2 grid gap-2 text-sm">
                 {hours.map(({ day, label, blocks }) => (
-                  <li key={day} className="flex justify-between text-stone2">
-                    <span>{label}</span>
-                    <span className={blocks.length > 0 ? "text-ink" : ""}>
+                  <li key={day}>
+                    <span className="font-medium text-ink">{label}</span>
+                    <span className={`block ${blocks.length > 0 ? "text-ink" : "text-stone2"}`}>
                       {blocks.length > 0
                         ? blocks
                             .map((b) => `${formatTime12(b.openTime) ?? "?"} – ${formatTime12(b.closeTime) ?? "?"}`)
