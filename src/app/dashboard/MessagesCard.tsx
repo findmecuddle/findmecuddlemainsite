@@ -17,63 +17,24 @@ import {
   type listAppointments,
 } from "@/app/actions";
 import { REPORT_REASONS, FLAG_REASON_MAX_CHARS, SUPPORT_EMAIL } from "@/lib/config";
+import { formatTime12, timesOverlap } from "@/lib/scheduling";
 
 type Inquiry = Awaited<ReturnType<typeof listInquiries>>[number];
 type MyReport = Awaited<ReturnType<typeof listMyReports>>[number];
 type Appointment = Awaited<ReturnType<typeof listAppointments>>[number];
 
-function formatTime12(hm: string | null): string | null {
-  if (!hm) return null;
-  const [h, m] = hm.split(":").map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) return null;
-  const period = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
-}
-
-/** Rough length in minutes for a DURATION_OPTIONS value (see lib/config.ts: "30 min", "1
- *  hour"..."23 hours", "Overnight") — only used for conflict-checking below, so an unknown/empty
- *  duration falls back to a conservative 1 hour rather than 0 (a 0-length block could never
- *  conflict with anything, which would silently hide a real double-booking). */
-function durationToMinutes(d: string | null): number {
-  if (!d) return 60;
-  if (d === "Overnight") return 720;
-  const min = /^(\d+)\s*min$/.exec(d);
-  if (min) return parseInt(min[1], 10);
-  const hrs = /^(\d+)\s*hours?$/.exec(d);
-  if (hrs) return parseInt(hrs[1], 10) * 60;
-  return 60;
-}
-
-function timeToMinutes(hm: string | null): number | null {
-  if (!hm) return null;
-  const [h, m] = hm.split(":").map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) return null;
-  return h * 60 + m;
-}
-
 /** Every existing appointment on `date` that overlaps [time, time + duration) — used to warn a
- *  cuddler, before they accept, that they're already booked then. If no specific time was
- *  requested (flexible "Whenever open"), or an existing appointment has no time set either, it
- *  can't be ruled out as a conflict, so it's included as a heads-up rather than silently skipped. */
+ *  cuddler, before they accept, that they're already booked then. This is just a heads-up here;
+ *  the actual block happens server-side (see findSchedulingConflict in actions.ts) when they
+ *  submit, since a warning shown here could otherwise go stale the moment two tabs are open. */
 function findConflicts(
   date: string | null,
   time: string | null,
   duration: string | null,
   appointments: Appointment[]
 ): Appointment[] {
-  if (!date) return [];
-  const dayAppts = appointments.filter((a) => a.date === date);
-  if (dayAppts.length === 0) return [];
-  const startMin = timeToMinutes(time);
-  if (startMin == null) return dayAppts;
-  const endMin = startMin + durationToMinutes(duration);
-  return dayAppts.filter((a) => {
-    const aStart = timeToMinutes(a.time);
-    if (aStart == null) return true;
-    const aEnd = aStart + durationToMinutes(a.duration);
-    return startMin < aEnd && aStart < endMin;
-  });
+  if (!date || !time) return [];
+  return appointments.filter((a) => a.date === date && timesOverlap(time, duration, a.time, a.duration));
 }
 
 const LOCATION_LABEL: Record<string, string> = {
@@ -352,7 +313,8 @@ function MessageRow({
   const severity = inquiry.flagSeverity;
   const whenLabel = inquiry.flexible
     ? "Whenever open"
-    : [inquiry.preferredDate, inquiry.preferredTime].filter(Boolean).join(" at ") || null;
+    : [inquiry.preferredDate, formatTime12(inquiry.preferredTime) ?? inquiry.preferredTime].filter(Boolean).join(" at ") ||
+      null;
   // Checks the requested date/time against everything already on the calendar — lets a cuddler
   // see they're double-booked before they hit Accept, instead of finding out later.
   const conflicts =
@@ -589,7 +551,7 @@ function AcceptInquiryButton({
       {liveConflicts.length > 0 && (
         <p className="w-full text-xs text-red-700">
           ⚠ Already booked with {liveConflicts.map((c) => c.clientName).join(", ")} at this date/time — pick a
-          different slot above, or confirm anyway if you can actually fit both.
+          different slot above (this will be blocked when you confirm).
         </p>
       )}
       {error && <p className="w-full text-xs text-red-700">{error}</p>}

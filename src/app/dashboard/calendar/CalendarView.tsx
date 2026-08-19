@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { createAppointment, updateAppointment, deleteAppointment, type listAppointments } from "@/app/actions";
 import { DURATION_OPTIONS } from "@/lib/config";
+import { formatTime12, timesOverlap } from "@/lib/scheduling";
 
 type Appointment = Awaited<ReturnType<typeof listAppointments>>[number];
 
@@ -15,15 +16,6 @@ function toDateKey(d: Date): string {
 function formatDateLabel(key: string): string {
   const [y, m, d] = key.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-}
-
-function formatTime12(hm: string | null): string | null {
-  if (!hm) return null;
-  const [h, m] = hm.split(":").map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) return null;
-  const period = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
 }
 
 export default function CalendarView({ appointments }: { appointments: Appointment[] }) {
@@ -206,30 +198,24 @@ export default function CalendarView({ appointments }: { appointments: Appointme
         </div>
       )}
 
-      {addingFor && <AppointmentForm mode="add" date={addingFor} onClose={() => setAddingFor(null)} />}
-      {editing && <AppointmentForm mode="edit" appointment={editing} onClose={() => setEditing(null)} />}
+      {addingFor && (
+        <AppointmentForm mode="add" date={addingFor} onClose={() => setAddingFor(null)} appointments={appointments} />
+      )}
+      {editing && (
+        <AppointmentForm mode="edit" appointment={editing} onClose={() => setEditing(null)} appointments={appointments} />
+      )}
     </div>
   );
 }
 
 function AppointmentForm(
   props:
-    | { mode: "add"; date: string; onClose: () => void }
-    | { mode: "edit"; appointment: Appointment; onClose: () => void }
+    | { mode: "add"; date: string; onClose: () => void; appointments: Appointment[] }
+    | { mode: "edit"; appointment: Appointment; onClose: () => void; appointments: Appointment[] }
 ) {
-  const { mode, onClose } = props;
+  const { mode, onClose, appointments } = props;
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-
-  function submit(formData: FormData) {
-    setError(null);
-    startTransition(async () => {
-      const result =
-        mode === "add" ? await createAppointment(null, formData) : await updateAppointment(null, formData);
-      if (result?.error) setError(result.error);
-      else onClose();
-    });
-  }
 
   const defaults =
     mode === "edit"
@@ -244,6 +230,26 @@ function AppointmentForm(
           notes: props.appointment.notes ?? "",
         }
       : { id: "", clientName: "", clientPhone: "", clientEmail: "", date: props.date, time: "", duration: "", notes: "" };
+
+  const [date, setDate] = useState(defaults.date);
+  const [time, setTime] = useState(defaults.time);
+  const [duration, setDuration] = useState(defaults.duration);
+
+  // Live heads-up as they fill out the form — the actual block happens server-side on submit
+  // (see findSchedulingConflict in actions.ts) regardless of whether this warning shows.
+  const liveConflicts = appointments.filter(
+    (a) => a.id !== defaults.id && a.date === date && timesOverlap(time || null, duration || null, a.time, a.duration)
+  );
+
+  function submit(formData: FormData) {
+    setError(null);
+    startTransition(async () => {
+      const result =
+        mode === "add" ? await createAppointment(null, formData) : await updateAppointment(null, formData);
+      if (result?.error) setError(result.error);
+      else onClose();
+    });
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={onClose}>
@@ -267,16 +273,37 @@ function AppointmentForm(
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label" htmlFor="apptDate">Date</label>
-            <input id="apptDate" name="date" type="date" defaultValue={defaults.date} required className="field" />
+            <input
+              id="apptDate"
+              name="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              className="field"
+            />
           </div>
           <div>
             <label className="label" htmlFor="apptTime">Time</label>
-            <input id="apptTime" name="time" type="time" defaultValue={defaults.time} className="field" />
+            <input
+              id="apptTime"
+              name="time"
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="field"
+            />
           </div>
         </div>
         <div>
           <label className="label" htmlFor="apptDuration">Duration</label>
-          <select id="apptDuration" name="duration" defaultValue={defaults.duration} className="field">
+          <select
+            id="apptDuration"
+            name="duration"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            className="field"
+          >
             <option value="">Not Set</option>
             {DURATION_OPTIONS.map((d) => (
               <option key={d} value={d}>{d}</option>
@@ -287,6 +314,12 @@ function AppointmentForm(
           <label className="label" htmlFor="apptNotes">Notes (Optional)</label>
           <textarea id="apptNotes" name="notes" rows={2} defaultValue={defaults.notes} className="field" />
         </div>
+        {liveConflicts.length > 0 && (
+          <p className="text-xs text-red-700">
+            ⚠ Already booked with {liveConflicts.map((c) => c.clientName).join(", ")} at this date/time — pick a
+            different slot (this will be blocked when you save).
+          </p>
+        )}
         {error && <p className="text-xs text-red-700">{error}</p>}
         <div className="flex gap-2">
           <button disabled={pending} className="btn-primary flex-1 disabled:opacity-50">

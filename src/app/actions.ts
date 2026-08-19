@@ -13,6 +13,7 @@ import { logSignup, checkGoLive, logCancelRequested } from "@/lib/activity";
 import { applyListingUpdate, applyHoursUpdate } from "@/lib/listingUpdate";
 import { buildEmployeeHoursJson } from "@/lib/employeeHours";
 import { normalizePhone, normalizeEmail } from "@/lib/phone";
+import { timesOverlap, formatTime12 } from "@/lib/scheduling";
 import {
   BOOST_COOLDOWN_HOURS,
   BOOST_MESSAGE_MAX_CHARS,
@@ -760,6 +761,32 @@ export async function listAppointments(cuddlerId: string) {
     .orderBy(asc(appointments.date), asc(appointments.time));
 }
 
+/** Blocks a genuine double-booking — used by createAppointment, acceptInquiryAsAppointment, and
+ *  updateAppointment below, so a new or edited appointment can't overlap an existing one on the
+ *  same day. Only a real, provable overlap blocks (both the new slot and the existing one need an
+ *  actual start time — see timesOverlap in lib/scheduling.ts); an appointment with no time set
+ *  can't be ruled in or out, so it's left alone rather than blocking on a guess.
+ *  `excludeId` skips the appointment being edited itself when updateAppointment calls this. */
+async function findSchedulingConflict(
+  cuddlerId: string,
+  date: string,
+  time: string | null,
+  duration: string | null,
+  excludeId?: string
+): Promise<string | null> {
+  if (!time) return null;
+  const sameDay = await db
+    .select()
+    .from(appointments)
+    .where(and(eq(appointments.cuddlerId, cuddlerId), eq(appointments.date, date)));
+  const conflict = sameDay.find(
+    (a) => a.id !== excludeId && timesOverlap(time, duration, a.time, a.duration)
+  );
+  if (!conflict) return null;
+  const label = formatTime12(conflict.time) ?? "that time";
+  return `You already have ${conflict.clientName} booked at ${label} that day.`;
+}
+
 /** Manual "Add Appointment" — for anything arranged off-platform (call, text, in-person) that a
  *  cuddler wants on their calendar, not just inquiries that came through the site. */
 export async function createAppointment(
@@ -780,6 +807,9 @@ export async function createAppointment(
 
   if (!clientName) return { error: "Enter a name." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Pick a valid date." };
+
+  const conflict = await findSchedulingConflict(me.id, date, time, duration);
+  if (conflict) return { error: conflict };
 
   await db.insert(appointments).values({
     cuddlerId: me.id,
@@ -812,6 +842,9 @@ export async function acceptInquiryAsAppointment(
   const date = String(formData.get("date") || "").trim();
   const time = String(formData.get("time") || "").trim() || null;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Pick a valid date." };
+
+  const conflict = await findSchedulingConflict(me.id, date, time, inquiry.duration);
+  if (conflict) return { error: conflict };
 
   await db.insert(appointments).values({
     cuddlerId: me.id,
@@ -866,6 +899,9 @@ export async function updateAppointment(
 
   if (!clientName) return { error: "Enter a name." };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Pick a valid date." };
+
+  const conflict = await findSchedulingConflict(me.id, date, time, duration, id);
+  if (conflict) return { error: conflict };
 
   await db
     .update(appointments)
