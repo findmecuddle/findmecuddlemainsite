@@ -197,10 +197,17 @@ export default async function CuddlerPage(props: { params: Promise<{ slug: strin
               // to the next, regardless of what aspect ratio each original upload happens to be.
               // This is purely a display crop — the stored file itself is never touched, so nothing
               // here can cause the kind of data loss the old crop tool did (see cardPhotoUrl in
-              // schema.ts). Row scrolls horizontally if photos don't all fit.
+              // schema.ts). Row scrolls horizontally if photos don't all fit — on mobile the tile
+              // width is viewport-relative (not a fixed size) specifically so one photo nearly
+              // fills the screen with a deliberate peek of the next one poking in from the right,
+              // signaling "swipe for more" instead of the old fixed 256px tiles, which could just
+              // as easily read as a photo that got randomly cut off mid-frame.
               (<div className="flex gap-2 overflow-x-auto pb-1">
                 {photos.map((p, i) => (
-                  <div key={p.url} className="h-64 w-64 shrink-0 overflow-hidden rounded-2xl bg-spruce-tint sm:h-80 sm:w-80">
+                  <div
+                    key={p.url}
+                    className="aspect-square w-[78vw] max-w-80 shrink-0 overflow-hidden rounded-2xl bg-spruce-tint sm:h-80 sm:w-80"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={p.url}
