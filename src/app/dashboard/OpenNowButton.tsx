@@ -24,7 +24,13 @@ export default function OpenNowButton({
   const expiresAt = openNowActivatedAt
     ? new Date(openNowActivatedAt).getTime() + MANUAL_OPEN_NOW_HOURS * 3600_000
     : null;
-  const active = !!expiresAt && expiresAt > now;
+  // Must also be live — an activation from before the listing went down (e.g. a past_due
+  // subscription, see dashboard/page.tsx) can still be sitting inside its window, but it isn't
+  // actually showing anywhere while the listing itself is hidden. Without the `live` check here,
+  // the button confusingly claimed "Available Now Active" while "Go live first" was shown right
+  // underneath it.
+  const withinWindow = !!expiresAt && expiresAt > now;
+  const active = live && withinWindow;
 
   return (
     <div className="mt-3">
